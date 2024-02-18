@@ -1,0 +1,25 @@
+# set the seed
+SEED <- 1234
+set.seed(SEED)
+
+# Define the true DGP
+theta_ast <- 0.13
+
+# Repeat the experiment over different regimes
+num_iters <- 1e4
+iters <- 1:num_iters  # Number of iterations
+ns <- c(2, 10, 100)  # Regimes of n
+n_lambda <- 1e2  # Number of x-axis evaluations
+taus <- 10^seq(-5, 5, length.out = n_lambda)
+priors <- list(#list(a = 1, b = 5, name = "weakly informative"),
+               list(a = 1, b = 1, name = "uniform"))
+
+# plotting
+GR <- 1.61803
+paper_theme <- (
+  theme_bw() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          strip.background = element_blank(),
+          panel.background = element_blank(),
+          legend.position="none"))
