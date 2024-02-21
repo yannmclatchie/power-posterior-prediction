@@ -3,6 +3,7 @@ library(tidyr)
 library(readr)
 library(purrr)
 library(simstudy)
+library(ggplot2)
 source("R/normal-location-misspecified/config.R")
 source("R/normal-location-misspecified/utils.R")
 
