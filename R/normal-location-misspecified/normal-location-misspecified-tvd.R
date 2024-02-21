@@ -2,8 +2,6 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(purrr)
-library(ggplot2)
-library(bayesflow)
 library(simstudy)
 source("R/normal-location-misspecified/config.R")
 source("R/normal-location-misspecified/utils.R")
@@ -18,28 +16,17 @@ iter <- as.numeric(args[[3]]) # compute expectation with MC
 # extract the prior from the dictionary
 prior <- prior_dict[[prior_name]]
 
-# evaluate the tvd across combinations
-#combis <- expand.grid(iter = iters, n = ns, tau = taus, prior = priors)
-#df <- combis |>
-#  pmap(\(iter, n, tau, prior) tau_tvd(iter = iter, 
-#                                      n = n,
-#                                      tau = tau,
-#                                      prior = prior,
-#                                      dgp = dgp),
-#       .progress = TRUE) |> # progress bar
-#  bind_rows()
-
+# iterate over values of tau
 df <- taus|>
   map(\(tau) tau_tvd(iter = iter, 
                      n = n,
                      tau = tau,
                      prior = prior,
-                     dgp = dgp),
-          .progress = TRUE) |> # progress bar
+                     dgp = dgp)) |>
   bind_rows()
 
 # save resutls to csv 
 file_name <- paste0("data/normal-location-misspecified-tvd/",
-		    "normal-location-misspecified-tvd-n_,",
+		                "normal-location-misspecified-tvd-n_",
                     n,"-prior_",prior_name,"-iter_",iter,".csv")
 write_csv(df, file = file_name)

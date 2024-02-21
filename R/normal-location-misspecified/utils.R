@@ -52,3 +52,46 @@ tau_tvd <- function(iter, n, prior, tau, dgp) {
               tau = tau,
               prior = prior$name))
 }
+
+# compute the LOO-CV elpd for a given tau/n/prior/dgp combo
+elpd_loo <- function(iter, n, prior, tau, dgp) {
+  # simulate data from the true DGP
+  dx <- genData(n, dgp$def)
+  y <- dx$y
+  
+  # extract prior
+  mu_0 <- prior$mu
+  sigma_0 <- prior$sigma
+  
+  # extract mixutre variance
+  sigma_mix <- dgp$sigma_mix
+  
+  # compute the LOO-CV log predictive at each observation
+  lpd <- numeric(n)
+  for (i in 1:n) {
+    lpd[i] <- lpd_loo_i(y, i, mu_0, sigma_0, sigma_mix, tau)
+  }
+  
+  # compute the LOO-CV elpd
+  return(list(elpd = sum(lpd) / n,
+              iter = iter,
+              n = n,
+              tau = tau,
+              prior = prior$name))
+}
+lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
+  # produce the deleted data
+  y_loo <- y[-i]
+  y_oos <- y[i]
+  
+  # compute posterior parameters
+  n <- length(y)
+  bar_y_i <- mean(y_loo)
+  sigma_i <- sqrt(1 / (((n - 1) * tau) / sigma_ast^2 + 1 / sigma_0^2))
+  mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + ((n - 1) * tau * bar_y_i) / sigma_ast^2)
+  
+  # evaluate the log predictive
+  log_pred <- dnorm(x = y_oos, mean = mu_i, 
+                    sd = sqrt(sigma_i^2 + sigma_ast^2), log = TRUE)
+  return(log_pred)
+}
