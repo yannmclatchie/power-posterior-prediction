@@ -39,6 +39,7 @@ df <- taus|>
   bind_rows()
 
 # save resutls to csv 
-file_name <- paste0("data/normal-location-misspecified-tvd-n_,",
+file_name <- paste0("data/normal-location-misspecified-tvd/",
+		    "normal-location-misspecified-tvd-n_,",
                     n,"-prior_",prior_name,"-iter_",iter,".csv")
 write_csv(df, file = file_name)
