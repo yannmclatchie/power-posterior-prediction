@@ -35,10 +35,10 @@ lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
   y_oos <- y[i]
   
   # compute posterior parameters
-  n <- length(y)
+  n <- length(y_loo)
   bar_y_i <- mean(y_loo)
-  sigma_i <- sqrt(1 / (((n - 1) * tau) / sigma_ast^2 + 1 / sigma_0^2))
-  mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + ((n - 1) * tau * bar_y_i) / sigma_ast^2)
+  sigma_i <- sqrt(1 / ((n * tau) / sigma_ast^2 + 1 / sigma_0^2))
+  mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + (n * tau * bar_y_i) / sigma_ast^2)
   
   # evaluate the log predictive
   log_pred <- dnorm(x = y_oos, mean = mu_i, 
@@ -157,7 +157,7 @@ p_tau_sel <- df |>
 p_tau_sel
 
 # save the plot
-ggsave("./figs/normal-location-tau-selection.pdf.pdf", width = 5, height = 5 / GR)
+ggsave("./figs/normal-location-tau-selection.pdf", width = 5, height = 5 / GR)
 tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
 save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
-               filename = "./tikz/normal-location-tau-selection.pdf.tex")
+               filename = "./tikz/normal-location-tau-selection.tex")

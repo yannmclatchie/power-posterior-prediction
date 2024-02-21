@@ -1,6 +1,6 @@
 # set the seed
-SEED <- 1234
-set.seed(SEED)
+#SEED <- 1234
+#set.seed(SEED)
 
 # define the true DGP
 mu_1 <- -3
@@ -32,8 +32,14 @@ iters <- 1:num_iters  # number of iterations
 ns <- c(2, 10, 100)  # regimes of n
 n_lambda <- 1e2  # number of x-axis evaluations
 taus <- 10^seq(-5, 5, length.out = n_lambda)
-priors <- list(list(mu = 0, sigma = 1, name = "weak"),
-               list(mu = 0, sigma = sqrt(1e26), name = "flat"))
+#priors <- list(list(mu = 0, sigma = 1, name = "weak"),
+#               list(mu = 0, sigma = sqrt(1e26), name = "flat"))
+
+# prior dictionary
+weak_prior <- list(mu = 0, sigma = 1, name = "weak")
+flat_prior <- list(mu = 0, sigma = sqrt(1e26), name = "flat")
+prior_dict <- list("flat" = flat_prior, 
+                   "weak" = weak_prior)
 
 # plotting
 GR <- 1.61803
