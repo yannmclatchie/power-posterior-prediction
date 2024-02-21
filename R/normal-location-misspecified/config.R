@@ -20,9 +20,9 @@ def <- defData(def, varname = "y",
                formula = "x1 | .3 + x2 | .4 + x3 | .3", 
                dist = "mixture")
 mix_mean <- lambda_1 * mu_1 + lambda_2 * mu_2 + lambda_3 * mu_3
-mix_mean2 <- (lambda_1 * (mu_1 + sigma_1) 
-              + lambda_2 * (mu_2 + sigma_2) 
-              + lambda_3 * (mu_3 + sigma_3))
+mix_mean2 <- (lambda_1 * (mu_1^2 + sigma_1) 
+              + lambda_2 * (mu_2^2 + sigma_2) 
+              + lambda_3 * (mu_3^2 + sigma_3))
 mix_var <- mix_mean2 - mix_mean^2
 dgp <- list(def = def, sigma_mix = sqrt(mix_var))
 
