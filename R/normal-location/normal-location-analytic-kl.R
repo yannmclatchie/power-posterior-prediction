@@ -38,7 +38,7 @@ p_risk <- ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   facet_grid(sigma_0_2 ~ n, scales = "free_y",
              labeller = as_labeller(prior_names)) +
-  scale_x_continuous(trans = "log10", breaks = 10^seq(-15, 15, length.out = 3)) +
+  scale_x_continuous(trans = "log10", breaks = 10^seq(-4, 4, length.out = 3)) +
   xlab("tau") +
   ylab("Risk") +
   paper_theme

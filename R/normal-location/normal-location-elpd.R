@@ -57,13 +57,15 @@ df <- combis |>
                                        sigma_ast = sigma_ast),
        .progress = TRUE) |>
   bind_rows()
-
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # save resutls to csv 
 file_name <- paste0("data/normal-location-elpd.csv")
 write_csv(df, file = file_name)
+
+# read results from csv
+#df <- read_csv("data/normal-location-elpd.csv")
 
 # Group dataframe by iteration
 gdf <- df |>
@@ -159,5 +161,5 @@ p_tau_sel
 # save the plot
 ggsave("./figs/normal-location-tau-selection.pdf", width = 5, height = 5 / GR)
 tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
-save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
+save_tikz_plot(p_tau_sel, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-tau-selection.tex")
