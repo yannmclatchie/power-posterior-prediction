@@ -3,6 +3,7 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 library(bayesflow)
+library(tidyverse)
 source("R/normal-location/config.R")
 
 # numerical computation of TVD between two normals
@@ -12,7 +13,7 @@ tvd_integrand <- function(x, mu_1, sigma_1, mu_2, sigma_2) {
 }
 tvd_normal <- function(mu_1, sigma_1, mu_2, sigma_2) {
   integrate(tvd_integrand, mu_1, sigma_1, mu_2, sigma_2,
-            lower = -Inf, upper = Inf, rel.tol = 1e-9)$value
+            lower = -Inf, upper = Inf)$value # rel.tol = 1e-9
 }
 
 # main experiment function
@@ -58,6 +59,8 @@ df$prior = factor(df$prior, levels=c('weak', 'flat'))
 file_name <- paste0("data/normal-location-tvd.csv")
 write_csv(df, file = file_name)
 
+df <- read_csv(file_name)
+
 # Group dataframe by iteration
 gdf <- df |>
   group_by(n, tau, prior) |>
@@ -102,3 +105,35 @@ ggsave("./figs/normal-location-tvd.pdf", width = 5, height = 5 / GR)
 tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
 save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-tvd.tex")
+
+# compute the Hellinger bound
+tau_hel_sq <- function(n, tau, k0) {
+  1 - sqrt((4 * sqrt(1 + 1 / (n * tau + k0))) 
+           / (2 * (2 + 1 / (n * tau + k0)) + n * tau^2 / (n * tau + k0)^2))
+}
+hel_bounds <- function(n, tau, prior, sigma_ast) {
+  # compute the k0 factor
+  k0 = sigma_ast^2 / prior$sigma^2
+
+  # return the bounds
+  return(list(n = n,
+              tau = tau,
+              prior = prior$name,
+              lower = tau_hel_sq(n, tau, k0),
+              upper = sqrt(2) * sqrt(tau_hel_sq(n, tau, k0))))
+}
+combis <- expand.grid(n = ns, tau = taus, prior = priors)
+hel_df <- combis |>
+  pmap(\(n, tau, prior) hel_bounds(n = n,
+                                   tau = tau,
+                                   prior = prior,
+                                   sigma_ast = sigma_ast)) |>
+  bind_rows()
+  
+# add Hellinger bounds to plot
+p_tvd +
+  geom_ribbon(data = hel_df,
+              aes(tau, ymax = upper, ymin = lower),
+              fill = NA,
+              colour = "red")
+
