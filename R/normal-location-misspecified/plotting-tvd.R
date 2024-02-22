@@ -1,3 +1,15 @@
+library(ggplot2)
+library(bayesflow)
+library(tidyverse)
+library(simstudy)
+source("R/normal-location-misspecified/config.R")
+
+#files <- list.files("data/normal-location-misspecified-tvd", full.names = TRUE)
+#df <- files %>%
+#  map(read_csv) %>% 
+#  reduce(rbind)
+#write_csv(df, "data/normal-location-misspecified-tvd/normal-location-misspecified-tvd-all.csv")
+df <- read_csv("data/normal-location-misspecified-tvd/normal-location-misspecified-tvd-all.csv")
 
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
@@ -36,6 +48,7 @@ p_tvd <- ggplot() +
   facet_grid(prior ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log10", 
                      breaks = 10^seq(-4, 4, length.out = 3)) +
+  scale_y_continuous(limits = c(0, 1)) +
   xlab("tau") +
   ylab("TVD") +
   paper_theme

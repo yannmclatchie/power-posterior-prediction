@@ -1,3 +1,18 @@
+library(ggplot2)
+library(bayesflow)
+library(tidyverse)
+library(simstudy)
+source("R/normal-location-misspecified/config.R")
+
+#files <- list.files("data/normal-location-misspecified-elpd", full.names = TRUE)
+#df <- files %>%
+#  map(read_csv) %>% 
+#  reduce(rbind)
+#write_csv(df, "data/normal-location-misspecified-elpd/normal-location-misspecified-elpd-all.csv")
+df <- read_csv("data/normal-location-misspecified-elpd/normal-location-misspecified-elpd-all.csv")
+
+# fix ordering of priors
+df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # Group dataframe by iteration
 gdf <- df |>
