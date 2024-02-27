@@ -3,7 +3,7 @@ SEED <- 1234
 set.seed(SEED)
 
 # define the true DGP
-theta_ast <- 3
+theta_ast <- 0
 sigma_ast <- 1
 
 # repeat the experiment over different regimes

@@ -107,11 +107,14 @@ save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-tvd.tex")
 
 # compute the Hellinger bound
-tau_hel_sq <- function(n, tau, k0) {
-  1 - sqrt((4 * sqrt(1 + 1 / (n * tau + k0))) 
+tau_hel_sq <- function(n, tau, k0, theta_ast, sigma_ast) {
+  (1 - sqrt((4 * sqrt(1 + 1 / (n * tau + k0))) 
            / (2 * (2 + 1 / (n * tau + k0)) + n * tau^2 / (n * tau + k0)^2))
+   * exp(-(k0^2 * theta_ast^2) / 
+           (2 * sigma_ast^2 * (2 * (2 * (n * tau + k0) + 1) 
+                               * (n * tau + k0) + n * tau^2))))
 }
-hel_bounds <- function(n, tau, prior, sigma_ast) {
+hel_bounds <- function(n, tau, prior, theta_ast, sigma_ast) {
   # compute the k0 factor
   k0 = sigma_ast^2 / prior$sigma^2
 
@@ -119,14 +122,15 @@ hel_bounds <- function(n, tau, prior, sigma_ast) {
   return(list(n = n,
               tau = tau,
               prior = prior$name,
-              lower = tau_hel_sq(n, tau, k0),
-              upper = sqrt(2) * sqrt(tau_hel_sq(n, tau, k0))))
+              lower = tau_hel_sq(n, tau, k0, theta_ast, sigma_ast),
+              upper = sqrt(2) * sqrt(tau_hel_sq(n, tau, k0, theta_ast, sigma_ast))))
 }
 combis <- expand.grid(n = ns, tau = taus, prior = priors)
 hel_df <- combis |>
   pmap(\(n, tau, prior) hel_bounds(n = n,
                                    tau = tau,
                                    prior = prior,
+                                   theta_ast = theta_ast,
                                    sigma_ast = sigma_ast)) |>
   bind_rows()
   

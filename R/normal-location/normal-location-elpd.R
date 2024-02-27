@@ -42,7 +42,8 @@ lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
   
   # evaluate the log predictive
   log_pred <- dnorm(x = y_oos, mean = mu_i, 
-                    sd = sqrt(sigma_i^2 + sigma_ast^2), log = TRUE)
+                    sd = sqrt(sigma_i^2 + sigma_ast^2), 
+                    log = TRUE)
   return(log_pred)
 }
 
@@ -57,6 +58,7 @@ df <- combis |>
                                        sigma_ast = sigma_ast),
        .progress = TRUE) |>
   bind_rows()
+
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
@@ -65,7 +67,7 @@ file_name <- paste0("data/normal-location-elpd.csv")
 write_csv(df, file = file_name)
 
 # read results from csv
-#df <- read_csv("data/normal-location-elpd.csv")
+df <- read_csv(file_name)
 
 # Group dataframe by iteration
 gdf <- df |>
@@ -129,18 +131,18 @@ p_tau_sel <- df |>
   dplyr::select(-c("prior")) |>
   # mutate tau to be in log scale
   mutate(tau = log10(tau)) |>
+  # choose the best tau by elpd
   group_by(n, iter) |>
   filter(elpd == max(elpd)) |>
   ungroup() |>
   melt(id.vars = c("iter", "n")) |>
-  transform(value = as.numeric(value)) |>
   as_tibble() |>
   ggplot(aes(x = value)) +
   geom_histogram() +
   facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
                  labeller = as_labeller(facet_names), repeat.tick.labels = TRUE) +
   xlab(NULL) +
-  ylab(NULL) +  
+  ylab(NULL) +
   theme_bw() +
   theme(axis.line.y=element_blank(),
         axis.line.x=element_line(),
