@@ -12,7 +12,7 @@ theta_ast <- rep(.1, p)
 lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p))
 
 # repeat the experiment over different regimes
-num_iters <- 50 #1e4
+num_iters <- 100#1e4
 iters <- 1:num_iters  # number of iterations
 ns <- c(2, 10, 100)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations

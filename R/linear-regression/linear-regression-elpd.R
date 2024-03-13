@@ -42,13 +42,12 @@ lpd_loo_i <- function(y, X, i, Sigma_0, sigma_ast, tau) {
   
   # compute the posterior parameters
   Sigma_n <- tau / sigma_ast^2 * t(X_loo) %*% X_loo + solve(Sigma_0)
-  theta_n <- 1 / sigma_ast^2 * Sigma_n %*% t(X_loo) %*% y_loo
+  theta_n <- 1 / sigma_ast^2 * solve(Sigma_n) %*% t(X_loo) %*% y_loo
 
   # compute the posterior predictive parameters
   mu_pred <- t(theta_n) %*% X_oos
   sigma_pred <- sqrt(t(X_oos) %*% Sigma_n %*% X_oos + sigma_ast^2)
-  print(c(n, tau, mu_pred, sigma_pred))
-  
+
   # evaluate the leave-one-out predictive
   lpd <- dnorm(x = y_oos, mean = mu_pred, sd = sigma_pred, log = TRUE)
   return(lpd)
@@ -68,9 +67,6 @@ df <- combis |>
                                        sigma_ast = sigma_ast),
        .progress = TRUE) |>
   bind_rows()
-
-# fix ordering of priors
-#df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # Produce ribbons for the figures
 rdf <- df |>
@@ -101,7 +97,6 @@ p_elpd <- ggplot() +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
-  #scale_y_continuous(trans = "pseudo_log") +
   xlab("tau") +
   ylab("elpd(tau)") +
   paper_theme
