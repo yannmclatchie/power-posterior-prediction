@@ -27,6 +27,9 @@ datasets <- list()
 
 # iterate over n
 for (n in ns) {
+  # print progress
+  print(paste0("n = ",n))
+  
   # simulate datasets
   dataset <- bayesflow::generate_from_dgp(dgp = simulate_data,
                                           n_datasets = num_iters, 
