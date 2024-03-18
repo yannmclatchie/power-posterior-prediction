@@ -1,3 +1,6 @@
+require("simstudy")
+require("ggplot2")
+
 # set the seed
 SEED <- 1234
 set.seed(SEED)
