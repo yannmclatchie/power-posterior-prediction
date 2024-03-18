@@ -14,7 +14,6 @@ elpd_loo <- function(iter, n, prior, tau, theta_ast, sigma_ast) {
   y <- data$y
   
   # extract prior
-  mu_0 <- prior$mu_0
   Sigma_0 <- prior$Sigma_0
   
   # compute the LOO-CV log predictive at each observation
@@ -41,9 +40,10 @@ lpd_loo_i <- function(y, X, i, Sigma_0, sigma_ast, tau) {
   }
   
   # compute the posterior parameters
-  Sigma_n <- tau / sigma_ast^2 * t(X_loo) %*% X_loo + solve(Sigma_0)
-  theta_n <- 1 / sigma_ast^2 * solve(Sigma_n) %*% t(X_loo) %*% y_loo
-
+  Sigma_n_inv <- tau / sigma_ast^2 * t(X_loo) %*% X_loo + solve(Sigma_0)
+  Sigma_n <- solve(Sigma_n_inv)
+  theta_n <- tau / sigma_ast^2 * Sigma_n %*% t(X_loo) %*% y_loo
+  
   # compute the posterior predictive parameters
   mu_pred <- t(theta_n) %*% X_oos
   sigma_pred <- sqrt(t(X_oos) %*% Sigma_n %*% X_oos + sigma_ast^2)
@@ -97,6 +97,7 @@ p_elpd <- ggplot() +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
+  #scale_y_continuous(trans = "pseudo_log") +
   xlab("tau") +
   ylab("elpd(tau)") +
   paper_theme

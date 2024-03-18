@@ -8,13 +8,13 @@ set.seed(SEED)
 # define the true DGP
 p <- 10
 sigma_ast <- 1
-theta_ast <- rep(.1, p)
+theta_ast <- rep(0.1, p)
 lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p))
 
 # repeat the experiment over different regimes
-num_iters <- 100#1e4
+num_iters <- 1e4
 iters <- 1:num_iters  # number of iterations
-ns <- c(2, 10, 100)  # regimes of n
+ns <- c(2, 50, 200)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations
 taus <- 2^seq(-7, 7, length.out = n_tau)  # regimes of tau
 priors <- list(#list(mu_0 = 0, Sigma_0 = sqrt(1e26) * diag(p), name = "flat"),
