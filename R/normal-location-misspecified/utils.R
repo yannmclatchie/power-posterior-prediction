@@ -22,17 +22,14 @@ tvd_normal_misspecified <- function(mu_1, sigma_1, mu_2, sigma_2, mu_3,
 }
 
 # compute the TVD for a given tau/n/prior/dgp combo
-tau_tvd <- function(iter, n, prior, tau, dgp) {
-  # simulate data from the true DGP
-  dx <- genData(n, dgp$def)
-  y <- dx$y
+tau_tvd <- function(iter, n, prior, tau, datasets, sigma_mix) {
+  # extract the data
+  data <- datasets[[as.character(n)]][[iter]]
+  y <- data$y
   
   # extract prior
   mu_0 <- prior$mu
   sigma_0 <- prior$sigma
-  
-  # extract mixture variance
-  sigma_mix <- dgp$sigma_mix
   
   # compute the posterior parameters
   bar_y <- mean(y)
@@ -54,17 +51,14 @@ tau_tvd <- function(iter, n, prior, tau, dgp) {
 }
 
 # compute the LOO-CV elpd for a given tau/n/prior/dgp combo
-elpd_loo <- function(iter, n, prior, tau, dgp) {
-  # simulate data from the true DGP
-  dx <- genData(n, dgp$def)
-  y <- dx$y
+elpd_loo <- function(iter, n, prior, tau, datasets, sigma_mix) {
+  # extract the data
+  data <- datasets[[as.character(n)]][[iter]]
+  y <- data$y
   
   # extract prior
   mu_0 <- prior$mu
   sigma_0 <- prior$sigma
-  
-  # extract mixutre variance
-  sigma_mix <- dgp$sigma_mix
   
   # compute the LOO-CV log predictive at each observation
   lpd <- numeric(n)

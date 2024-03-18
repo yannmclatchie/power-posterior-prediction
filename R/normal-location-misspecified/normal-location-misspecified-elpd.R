@@ -17,13 +17,17 @@ iter <- as.numeric(args[[3]]) # compute expectation with MC
 # extract the prior from the dictionary
 prior <- prior_dict[[prior_name]]
 
+# extract the data
+datasets <- readRDS("data/datasets/normal-mixture.RDS")
+
 # iterate over values of tau
 df <- taus|>
   map(\(tau) elpd_loo(iter = iter, 
                       n = n,
                       tau = tau,
                       prior = prior,
-                      dgp = dgp)) |>
+                      datasets = datasets,
+                      sigma_mix = sigma_mix)) |>
   bind_rows()
 
 # save resutls to csv 
