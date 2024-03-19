@@ -22,7 +22,7 @@ datasets <- readRDS("data/datasets/linear_regression.RDS")
 
 # Evaluate the elpd across combinations
 df <- taus |>
-  map(\(taus) elpd_loo(iter = iter, 
+  map(\(tau) elpd_loo(iter = iter, 
                        n = n,
                        tau = tau,
                        prior = prior,
