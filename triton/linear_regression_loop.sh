@@ -2,7 +2,7 @@
 
 ns=('50' '100' '500')
 priors=('flat' 'weak')
-n_iters=1000
+n_iters=2 #1000
 
 # loop over n
 for n in "${ns[@]}"
