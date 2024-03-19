@@ -17,8 +17,11 @@ iters <- 1:num_iters  # number of iterations
 ns <- c(50, 100, 500)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations
 taus <- 2^seq(-7, 7, length.out = n_tau)  # regimes of tau
-priors <- list(list(mu_0 = 0, Sigma_0 = sqrt(1e26) * diag(p), name = "flat"),
-               list(mu_0 = 0, Sigma_0 = diag(p), name = "weak"))
+# prior dictionary
+weak_prior <- list(mu_0 = 0, Sigma_0 = diag(p), name = "weak")
+flat_prior <- list(mu_0 = 0, Sigma_0 = sqrt(1e26) * diag(p), name = "flat")
+prior_dict <- list("flat" = flat_prior, 
+                   "weak" = weak_prior)
 
 # plotting
 GR <- 1.61803
