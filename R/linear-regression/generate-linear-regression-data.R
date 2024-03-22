@@ -1,5 +1,6 @@
 library(simstudy)
 library(bayesflow)
+library(tidyverse)
 source("R/linear-regression/config.R")
 
 # define the DGP 
