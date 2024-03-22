@@ -7,9 +7,10 @@ set.seed(SEED)
 
 # define the true DGP
 p <- 5
-sigma_ast <- 1
-theta_ast <- rep(0.1, p)
+sigma_ast <- 1 / 40
+theta_ast <- c(rep(0.1, 4), rep(0, p - 4))
 lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p))
+eps <- 0.5 # in-lier rate
 
 # repeat the experiment over different regimes
 num_iters <- 1e4

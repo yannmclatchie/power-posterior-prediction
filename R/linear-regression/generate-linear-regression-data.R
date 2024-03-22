@@ -4,12 +4,20 @@ source("R/linear-regression/config.R")
 
 # define the DGP 
 simulate_data <- function(rep_id, n, p) {
-  # generate data using simstudy
+  # generate linear regression data using simstudy
   def <- defRepeat(nVars = p, prefix = "x", formula = "0",
                    variance = "1", dist = "normal")
   def <- defData(def, varname = "y", formula = lin_formula, 
                  dist = "normal", variance = "..sigma_ast")
+  def <- defData(def, varname = "isInlier", formula = "..eps",
+                 dist = "binary")
   dd <- genData(n, def)
+  
+  # add in-liers in line with the Grunwald DGP
+  dd <- dd |> 
+    mutate_at("y", ~replace(., isInlier == 1, 0)) |>
+    mutate(across(x1:x5, ~replace(., isInlier == 1, 0))) |>
+    select(-isInlier)
   
   # convert to required format
   X <- as.matrix(dd)[, paste0("x", 1:p)]

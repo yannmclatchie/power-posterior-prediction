@@ -6,8 +6,18 @@ library(bayesflow)
 library(tidyverse)
 source("R/linear-regression/config.R")
 
-# read results from csv
-df <- read_csv(file = file_name)
+## data concatenation
+#files <- list.files("data/linear-regression", full.names = TRUE)
+#df <- files %>%
+#  map(read_csv) %>% 
+#  reduce(rbind)
+#write_csv(df, "data/linear-regression/linear-regression-elpd-all.csv")
+
+# data reading
+df <- read_csv("data/linear-regression/linear-regression-elpd-all.csv")
+
+# fix ordering of priors
+df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # Produce ribbons for the figures
 rdf <- df |>
