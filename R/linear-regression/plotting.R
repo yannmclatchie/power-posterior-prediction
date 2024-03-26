@@ -9,8 +9,8 @@ source("R/linear-regression/config.R")
 ## data concatenation
 #files <- list.files("data/linear-regression", full.names = TRUE)
 #df <- files %>%
-#  map(read_csv) %>% 
 #  reduce(rbind)
+#  map(read_csv) %>% 
 #write_csv(df, "data/linear-regression/linear-regression-elpd-all.csv")
 
 # data reading
@@ -18,6 +18,10 @@ df <- read_csv("data/linear-regression/linear-regression-elpd-all.csv")
 
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
+
+# visualise only the weak prior
+df <- df |>
+  filter(prior == "weak")
 
 # Produce ribbons for the figures
 rdf <- df |>

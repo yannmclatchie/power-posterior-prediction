@@ -5,7 +5,7 @@ require("ggplot2")
 SEED <- 1234
 set.seed(SEED)
 
-# define the true DGP
+# define the true DGP according to Grunwald
 p <- 5
 sigma_ast <- 1 / 40
 theta_ast <- c(rep(0.1, 4), rep(0, p - 4))
@@ -23,6 +23,9 @@ weak_prior <- list(mu_0 = 0, Sigma_0 = diag(p), name = "weak")
 flat_prior <- list(mu_0 = 0, Sigma_0 = sqrt(1e26) * diag(p), name = "flat")
 prior_dict <- list("flat" = flat_prior, 
                    "weak" = weak_prior)
+
+# for Monte Carlo integration 
+S <- 1000
 
 # plotting
 GR <- 1.61803
