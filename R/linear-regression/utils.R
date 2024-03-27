@@ -55,10 +55,6 @@ x_sim <- function(S, p, eps) {
   # simulate multivariate normal
   x <- rmvnorm(S, mean = rep(0, p), sigma = diag(p))
   
-  # zero-inflation
-  lambda <- runif(S)
-  x[lambda < eps] <- 0
-  
   # return the predictors
   return(x)
 }

@@ -14,10 +14,6 @@ n <- as.numeric(args[[1]]) # cycle through regimes of `n`
 prior_name <- args[[2]] # cycle through prior
 iter <- as.numeric(args[[3]]) 
 
-n <- 100
-prior_name <- "weak"
-iter <- 1
-
 # extract the prior from the dictionary
 prior <- prior_dict[[prior_name]]
 
@@ -42,10 +38,3 @@ file_name <- paste0("data/linear-regression/",
                     "linear-regression-tvd-n_",
                     n,"-prior_",prior_name,"-iter_",iter,".csv")
 write_csv(df, file = file_name)
-
-
-
-
-
-
-

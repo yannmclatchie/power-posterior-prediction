@@ -8,17 +8,13 @@ simulate_data <- function(rep_id, n, p) {
   # generate linear regression data using simstudy
   def <- defRepeat(nVars = p, prefix = "x", formula = "0",
                    variance = "1", dist = "normal")
-  def <- defData(def, varname = "y", formula = lin_formula, 
+  def <- defData(def, varname = "yInlier", formula = lin_formula, 
+                 dist = "normal", variance = "..delta * ..sigma_ast")
+  def <- defData(def, varname = "yNormal", formula = lin_formula, 
                  dist = "normal", variance = "..sigma_ast")
-  def <- defData(def, varname = "isInlier", formula = "..eps",
-                 dist = "binary")
+  def <- defData(def, varname = "y", dist = "mixture",
+                 formula = "yInlier | 0.5 + yNormal | 0.5") # NB: hard-coded eps
   dd <- genData(n, def)
-  
-  # add in-liers in line with the Grunwald DGP
-  dd <- dd |> 
-    mutate_at("y", ~replace(., isInlier == 1, 0)) |>
-    mutate(across(x1:x5, ~replace(., isInlier == 1, 0))) |>
-    select(-isInlier)
   
   # convert to required format
   X <- as.matrix(dd)[, paste0("x", 1:p)]
@@ -37,6 +33,9 @@ datasets <- list()
 
 # iterate over n
 for (n in ns) {
+  # print `n` regime
+  print(paste0('n = ', n))
+  
   # simulate datasets
   dataset <- bayesflow::generate_from_dgp(dgp = simulate_data,
                                           n_datasets = num_iters, 
