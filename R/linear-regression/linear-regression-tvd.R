@@ -36,37 +36,38 @@ log_mu_dens <- function(tilde_y, tilde_x, theta_ast, sigma_ast, eps) {
 }
 
 # conditional log posterior predictive density
-log_pred_dens <- function(tilde_y, tilde_x, theta_n, sigma_n, sigma_ast) {
+log_pred_dens <- function(tilde_y, tilde_x, theta_n, Sigma_n, sigma_ast) {
   # compute the posterior predictive parameters
   y_pred <- tilde_x %*% theta_n
-  sigma_pred <- sqrt(sigma_n^2 + sigma_ast^2)
-  
+  sigma_pred <- sqrt(t(tilde_x) %*% Sigma_n %*% tilde_x + sigma_ast)
+
   # compute and return the log predictive density
   return(dnorm(tilde_y, mean = y_pred, sd = sigma_pred, log = T))
 }
 
 # TVD calculation by quadrature integration
-tvd_integrand <- function(y, x, theta_n, sigma_n, theta_ast, 
+tvd_integrand <- function(y, x, theta_n, Sigma_n, theta_ast, 
                           sigma_ast, eps) {
-  0.5 * abs(log_mu_dens(y, tilde_x = x, theta_ast = theta_ast, 
+  0.5 * abs(log_mu_dens(tilde_y = y, tilde_x = x, theta_ast = theta_ast, 
                         sigma_ast = sigma_ast, eps = eps)
-            - log_pred_dens(y, tilde_x = x, theta_n = theta_n, 
-                            sigma_n = sigma_n, sigma_ast = sigma_ast))
+            - log_pred_dens(tilde_y = y, tilde_x = x, theta_n = theta_n, 
+                            Sigma_n = Sigma_n, sigma_ast = sigma_ast))
 }
 # vectorise the integrand for dimensional coherence
 tvd_integrand_vec <- Vectorize(tvd_integrand, vectorize.args = "y")
-tvd_quad_int <- function(x, theta_n, sigma_n, theta_ast, 
-                         sigma_ast, eps) {
-  integrate(tvd_integrand_vec, x, theta_n, sigma_n, theta_ast, 
-            sigma_ast, eps, lower = -Inf, upper = Inf)$value
+tvd_quad_int <- function(x, theta_n, Sigma_n, theta_ast, sigma_ast, eps) {
+  integrate(tvd_integrand_vec, x = x, theta_n = theta_n, Sigma_n = Sigma_n, 
+            theta_ast = theta_ast, sigma_ast = sigma_ast, eps = eps, 
+            lower = -Inf, upper = Inf)$value
 }
 
 ## ----
 ## Experiment
 
 # use random parameters to test
-theta_n <- rnorm(5)
-sigma_n <- rexp(1)
+theta_n <- rnorm(p)
+toe <- toeplitz((p:1)/p)
+Sigma_n <- rWishart(1, p, toe)[, , 1]
 
 # simulate the test predictors
 tilde_x <- x_sim(S, p, eps)
@@ -74,7 +75,7 @@ tilde_x <- x_sim(S, p, eps)
 # try with one point
 tvd_quad_int(x = tilde_x[1,], 
              theta_n = theta_n,
-             sigma_n = sigma_n, 
+             Sigma_n = Sigma_n, 
              theta_ast = theta_ast,
              sigma_ast = sigma_ast,
              eps = eps)
@@ -82,7 +83,7 @@ tvd_quad_int(x = tilde_x[1,],
 # compute the lpd at each test point
 tilde_x |> purrr::map(\(x) tvd_quad_int(x, 
                                         theta_n = theta_n,
-                                        sigma_n = sigma_n, 
+                                        Sigma_n = Sigma_n, 
                                         sigma_ast = sigma_ast,
                                         theta_ast = theta_ast,
                                         eps = eps))
