@@ -34,7 +34,7 @@ df <- taus |>
   bind_rows()
 
 # save resutls to csv 
-file_name <- paste0("data/linear-regression/",
+file_name <- paste0("data/linear-regression-tvd/",
                     "linear-regression-tvd-n_",
                     n,"-prior_",prior_name,"-iter_",iter,".csv")
 write_csv(df, file = file_name)
