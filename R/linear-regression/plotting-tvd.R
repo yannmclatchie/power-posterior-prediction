@@ -7,35 +7,35 @@ library(tidyverse)
 source("R/linear-regression/config.R")
 
 ## data concatenation
-#files <- list.files("data/linear-regression", full.names = TRUE)
-#df <- files %>%
-#  reduce(rbind)
-#  map(read_csv) %>% 
-#write_csv(df, "data/linear-regression/linear-regression-elpd-all.csv")
+files <- list.files("data/linear-regression-tvd", full.names = TRUE)
+df <- files %>%
+  map(read_csv) %>% 
+  reduce(rbind)
+write_csv(df, "data/linear-regression-tvd/linear-regression-tvd-all.csv")
 
 # data reading
-df <- read_csv("data/linear-regression/linear-regression-elpd-all.csv")
+df <- read_csv("data/linear-regression/linear-regression-tvd-all.csv")
 
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # visualise only the weak prior
-df <- df |>
-  filter(prior == "weak")
+#df <- df |>
+#  filter(prior == "weak")
 
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
-  summarize(elpd_min = quantile(elpd, probs = 0.05),
-            elpd_max = quantile(elpd, probs = 0.95))
+  summarize(elpd_min = quantile(tvd, probs = 0.05),
+            elpd_max = quantile(tvd, probs = 0.95))
 
 # Restrict the data to only the first hundred realisations
 df_100 <- df |> filter(iter <= 50)
 
-# Plot the elpd over iterations
-p_elpd <- ggplot() +
+# Plot the tvd over iterations
+p_tvd <- ggplot() +
   geom_line(data = df_100,
-            aes(tau, elpd, group = iter), 
+            aes(tau, tvd, group = iter), 
             colour = "grey",
             #size = 0.2, 
             alpha = 0.15) +
@@ -53,13 +53,13 @@ p_elpd <- ggplot() +
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
   xlab("tau") +
-  ylab("elpd(tau)") +
+  ylab("tvd") +
   paper_theme
-p_elpd
+p_tvd
 
 # save the plot
-ggsave("./figs/linear-regression-elpd.pdf", width = 5, height = 5 / GR)
+ggsave("./figs/linear-regression-tvd", width = 5, height = 5 / GR)
 my_width <- 0.9
 tex_width <- 5 * my_width; tex_height = (5 / GR) * my_width
 save_tikz_plot(p_elpd, width = tex_width, height = tex_height,
-               filename = "./tikz/linear-regression-elpd.tex")
+               filename = "./tikz/linear-regression-tvd.tex")
