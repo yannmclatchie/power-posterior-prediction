@@ -6,9 +6,10 @@ library(rmutil)
 source("R/beta-binomial/config.R")
 
 elpd_loo <- function(iter, n, prior, tau, theta_true) {
-  # simulate data from the true DGP
-  y <- rbinom(n, 1, theta_true)
-  
+  # extract the data
+  data <- datasets[[as.character(n)]][[iter]]
+  y <- data$y
+
   # extract prior
   alpha <- prior$a
   beta <- prior$b
@@ -26,7 +27,6 @@ elpd_loo <- function(iter, n, prior, tau, theta_true) {
               tau = tau,
               prior = prior$name))
 }
-
 lpd_loo_i <- function(y, i, alpha, beta, tau) {
   # produce the deleted data
   y_loo <- y[-i]
@@ -46,6 +46,9 @@ lpd_loo_i <- function(y, i, alpha, beta, tau) {
   return(log_pred)
 }
 
+# load in all datasets
+datasets <- readRDS("data/datasets/beta_binomial.RDS")  
+
 # Evaluate the elpd across combinations
 combis <- expand.grid(iter = iters, n = ns, tau = taus, prior = priors)
 df <- combis |>
@@ -61,57 +64,52 @@ df <- combis |>
 file_name <- paste0("data/beta-binomial-elpd.csv")
 write_csv(df, file = file_name)
 
-# Group dataframe by iteration
-gdf <- df |>
-  group_by(tau, n, prior) |>
-  summarize(elpd_mean = mean(elpd))
+# read in previously computed results
+df <- read_csv(file = "data/beta-binomial-elpd.csv")
 
-# Plot the mean results
-gdf |> 
-  ggplot(aes(x = tau, y = elpd_mean)) + 
-  geom_line() +
-  facet_wrap(~n, scales = "fixed")
-
-# Identify optimal tau
-best_lines <- gdf |>
-  ungroup() |>
-  group_by(n, prior) |>
-  filter(elpd_mean == max(elpd_mean)) 
+# Reduced number of iterations
+df_100 <- df |>
+  filter(iter <= 50)
 
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
-  summarize(elpd_min = quantile(elpd, probs = 0.1),
-            elpd_max = quantile(elpd, probs = 0.9))
+  summarize(elpd_min = quantile(elpd, probs = 0.05),
+            elpd_max = quantile(elpd, probs = 0.95),
+            elpd_mean = mean(elpd))
 
-# Plot the elpd over iterations
+# Plot the TVD over iterations
 p_elpd <- ggplot() +
+  geom_line(data = df_100,
+            aes(tau, elpd, group = iter), 
+            colour = "grey",
+            #size = 0.2, 
+            alpha = 0.15) +
   geom_ribbon(data = rdf,
               aes(ymin = elpd_min,
                   ymax = elpd_max,
                   x = tau),
-              colour = "grey",
+              colour = "black",
               alpha = 0.,
+              #size = 0.5,
               linetype = "dotted") +
-  geom_line(data = gdf,
-            aes(tau, elpd_mean),
-            colour = "black",
-            size = 1) +
-  geom_vline(xintercept = 1,
-             linewidth = 0.25,
-             linetype = "dashed") +
-  facet_wrap(~n, scales = "fixed", nrow = 1) +
-  scale_x_continuous(trans = "log10", breaks = 10^seq(-4, 4, length.out = 3)) +
-  coord_cartesian(ylim = c(-3, 0)) +
-  scale_y_continuous(limits = c()) +
+  #geom_line(data = rdf,
+  #          aes(tau, elpd_mean),
+  #          size = 0.75) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  facet_wrap( ~ n, scales = "fixed") +
+  scale_x_continuous(trans = "log2", 
+                     breaks = c(0.01, 0.1, 1, 10, 100),
+                     label = function(x) ifelse(x == 0, "0", x)) +
+  scale_y_continuous(limits = c(-2, 0)) +
   xlab("tau") +
-  ylab("elpd(t)") +
+  ylab("elpd") +
   paper_theme
 p_elpd
 
 # save the plot
 ggsave("./figs/beta-binomial-elpd.pdf", width = 5, height = 5 / GR)
-tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
+my_width <- 0.9
+tex_width <- 5 * my_width; tex_height = (5 / GR) * my_width
 save_tikz_plot(p_elpd, width = tex_width, height = tex_height * 0.75,
                filename = "./tikz/beta-binomial-elpd.tex")
-

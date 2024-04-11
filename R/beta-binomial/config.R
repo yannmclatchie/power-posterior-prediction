@@ -9,8 +9,8 @@ theta_ast <- 0.13
 num_iters <- 1e4
 iters <- 1:num_iters  # Number of iterations
 ns <- c(2, 10, 100)  # Regimes of n
-n_lambda <- 1e2  # Number of x-axis evaluations
-taus <- 10^seq(-5, 5, length.out = n_lambda)
+n_tau <- 1e2  # number of x-axis evaluations
+taus <- 2^seq(-7, 7, length.out = n_tau)  # regimes of tau
 priors <- list(#list(a = 1, b = 5, name = "weakly informative"),
                list(a = 1, b = 1, name = "uniform"))
 

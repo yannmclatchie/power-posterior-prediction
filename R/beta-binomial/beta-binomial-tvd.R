@@ -18,8 +18,9 @@ tvd_beta_binom <- function(n, p, alpha, beta) {
 
 # main experiment function
 tau_tvd <- function(iter, n, prior, tau, theta_ast) {
-  # simulate data from the true DGP
-  y <- rbinom(n, 1, theta_ast)
+  # extract the data
+  data <- datasets[[as.character(n)]][[iter]]
+  y <- data$y
 
   # extract prior
   alpha <- prior$a
@@ -42,6 +43,9 @@ tau_tvd <- function(iter, n, prior, tau, theta_ast) {
               prior = prior$name))
 }
 
+# load in all datasets
+datasets <- readRDS("data/datasets/beta_binomial.RDS")  
+
 # evaluate the elpd across combinations
 combis <- expand.grid(iter = iters, n = ns, tau = taus, prior = priors)
 df <- combis |>
@@ -53,45 +57,48 @@ df <- combis |>
        .progress = TRUE) |>
   bind_rows()
 
-# save resutls to csv 
+# save results to csv 
 file_name <- paste0("data/beta-binomial-tvd.csv")
 write_csv(df, file = file_name)
-#df <- read_csv(file = file_name)
+
+# read results from csv
+df <- read_csv(file = file_name)
 
 # Group dataframe by iteration
 gdf <- df |>
   group_by(n, tau, prior) |>
   summarize(tvd_mean = mean(tvd))
 
-# Identify optimal tau
-best_lines <- gdf |>
-  ungroup() |>
-  group_by(n, prior) |>
-  filter(tvd_mean == max(tvd_mean)) 
+# Reduced number of iterations
+df_100 <- df |>
+  filter(iter <= 50)
 
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
-  summarize(tvd_min = quantile(tvd, probs = 0.1),
-            tvd_max = quantile(tvd, probs = 0.9))
+  summarize(tvd_min = quantile(tvd, probs = 0.05),
+            tvd_max = quantile(tvd, probs = 0.95))
 
 # Plot the TVD over iterations
 p_tvd <- ggplot() +
+  geom_line(data = df_100,
+            aes(tau, tvd, group = iter), 
+            colour = "grey",
+            #size = 0.2, 
+            alpha = 0.2) +
   geom_ribbon(data = rdf,
               aes(ymin = tvd_min,
                   ymax = tvd_max,
                   x = tau),
-              colour = "grey",
+              colour = "black",
               alpha = 0.,
+              #size = 0.5,
               linetype = "dotted") +
-  geom_line(data = gdf,
-            aes(tau, tvd_mean),
-            colour = "black",
-            size = 1) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   facet_wrap( ~ n, scales = "fixed") +
-  scale_x_continuous(trans = "log10", 
-                     breaks = 10^seq(-4, 4, length.out = 3)) +
+  scale_x_continuous(trans = "log2", 
+                     breaks = c(0.01, 0.1, 1, 10, 100),
+                     label = function(x) ifelse(x == 0, "0", x)) +
   scale_y_continuous(limits = c(0, 1)) +
   xlab("tau") +
   ylab("TVD") +
@@ -100,6 +107,7 @@ p_tvd
 
 # save the plot
 ggsave("./figs/beta-binomial-tvd.pdf", width = 5, height = 5 / GR)
-tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
+my_width <- 0.9
+tex_width <- 5 * my_width; tex_height = (5 / GR) * my_width
 save_tikz_plot(p_tvd, width = tex_width, height = tex_height * 0.75,
                filename = "./tikz/beta-binomial-tvd.tex")
