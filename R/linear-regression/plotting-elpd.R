@@ -7,11 +7,11 @@ library(tidyverse)
 source("R/linear-regression/config.R")
 
 ## data concatenation
-files <- list.files("data/linear-regression-elpd", full.names = TRUE)
-df <- files %>%
-  map(read_csv) %>% 
-  reduce(rbind)
-write_csv(df, "data/linear-regression-elpd/linear-regression-elpd-all.csv")
+#files <- list.files("data/linear-regression-elpd", full.names = TRUE)
+#df <- files %>%
+#  map(read_csv) %>% 
+#  reduce(rbind)
+#write_csv(df, "data/linear-regression-elpd/linear-regression-elpd-all.csv")
 
 # data reading
 df <- read_csv("data/linear-regression/linear-regression-elpd-all.csv")
@@ -27,7 +27,8 @@ df$prior = factor(df$prior, levels=c('weak', 'flat'))
 rdf <- df |>
   group_by(tau, n, prior) |>
   summarize(elpd_min = quantile(elpd, probs = 0.05),
-            elpd_max = quantile(elpd, probs = 0.95))
+            elpd_max = quantile(elpd, probs = 0.95),
+            elpd_mean = mean(elpd))
 
 # Restrict the data to only the first hundred realisations
 df_100 <- df |> filter(iter <= 50)
@@ -47,8 +48,11 @@ p_elpd <- ggplot() +
               alpha = 0.,
               #size = 0.5,
               linetype = "dotted") +
+  #geom_line(data = rdf,
+  #          aes(tau, elpd_mean),
+  #          size = 0.75) +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  facet_grid(prior ~ n, scales = "free") +
+  facet_grid(prior ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +

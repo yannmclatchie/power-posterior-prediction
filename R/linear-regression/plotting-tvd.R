@@ -7,11 +7,11 @@ library(tidyverse)
 source("R/linear-regression/config.R")
 
 ## data concatenation
-files <- list.files("data/linear-regression-tvd", full.names = TRUE)
-df <- files %>%
-  map(read_csv) %>% 
-  reduce(rbind)
-write_csv(df, "data/linear-regression-tvd/linear-regression-tvd-all.csv")
+#files <- list.files("data/linear-regression-tvd", full.names = TRUE)
+#df <- files %>%
+#  map(read_csv) %>% 
+#  reduce(rbind)
+#write_csv(df, "data/linear-regression-tvd/linear-regression-tvd-all.csv")
 
 # data reading
 df <- read_csv("data/linear-regression/linear-regression-tvd-all.csv")
@@ -26,8 +26,9 @@ df$prior = factor(df$prior, levels=c('weak', 'flat'))
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
-  summarize(elpd_min = quantile(tvd, probs = 0.05),
-            elpd_max = quantile(tvd, probs = 0.95))
+  summarize(tvd_min = quantile(tvd, probs = 0.05),
+            tvd_max = quantile(tvd, probs = 0.95),
+            tvd_mean = mean(tvd))
 
 # Restrict the data to only the first hundred realisations
 df_100 <- df |> filter(iter <= 50)
@@ -40,15 +41,18 @@ p_tvd <- ggplot() +
             #size = 0.2, 
             alpha = 0.15) +
   geom_ribbon(data = rdf,
-              aes(ymin = elpd_min,
-                  ymax = elpd_max,
+              aes(ymin = tvd_min,
+                  ymax = tvd_max,
                   x = tau),
               colour = "black",
               alpha = 0.,
               #size = 0.5,
               linetype = "dotted") +
+  #geom_line(data = rdf,
+  #          aes(tau, tvd_mean),
+  #          size = 0.75) +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  facet_grid(prior ~ n, scales = "free") +
+  facet_grid(prior ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
@@ -58,8 +62,8 @@ p_tvd <- ggplot() +
 p_tvd
 
 # save the plot
-ggsave("./figs/linear-regression-tvd", width = 5, height = 5 / GR)
+ggsave("./figs/linear-regression-tvd.pdf", width = 5, height = 5 / GR)
 my_width <- 0.9
 tex_width <- 5 * my_width; tex_height = (5 / GR) * my_width
-save_tikz_plot(p_elpd, width = tex_width, height = tex_height,
+save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
                filename = "./tikz/linear-regression-tvd.tex")
