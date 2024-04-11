@@ -25,7 +25,7 @@ rdf <- df |>
 
 # Reduced number of iterations
 df_100 <- df |>
-  filter(iter <= 2)
+  filter(iter <= 50)
 
 # Plot the TVD over iterations
 p_tvd <- ggplot() +
