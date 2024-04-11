@@ -1,3 +1,3 @@
-# Power posteriors are ill-defined for prediction
+# Predictive performance of power posteriors
 
-This repository holds the code necessary to reproduce the plots from the paper "Power posteriors are ill-defined for prediction" (McLatchie et al., [2024](https://arxiv.org/abs/0000.00000)).
+This repository holds the code necessary to reproduce the plots from the paper "Predictive performance of power posteriors" (McLatchie et al., [2024](https://arxiv.org/abs/0000.00000)).
