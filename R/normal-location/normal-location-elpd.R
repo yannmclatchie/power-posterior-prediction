@@ -9,8 +9,9 @@ source("R/normal-location/config.R")
 
 # LOO-CV elpd of the normal model
 elpd_loo <- function(iter, n, prior, tau, theta_ast, sigma_ast) {
-  # simulate data from the true DGP
-  y <- rnorm(n, theta_ast, sigma_ast)
+  # extract the data
+  data <- datasets[[as.character(n)]][[iter]]
+  y <- data$y
   
   # extract prior
   mu_0 <- prior$mu
@@ -47,6 +48,9 @@ lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
   return(log_pred)
 }
 
+# load in all datasets
+datasets <- readRDS("data/datasets/normal.RDS")
+
 # Evaluate the elpd across combinations
 combis <- expand.grid(iter = iters, n = ns, tau = taus, prior = priors)
 df <- combis |>
@@ -69,68 +73,51 @@ write_csv(df, file = file_name)
 # read results from csv
 df <- read_csv(file_name)
 
-# Group dataframe by iteration
-gdf <- df |>
-  group_by(n, tau, prior) |>
-  summarize(elpd_mean = mean(elpd))
-
-# Plot the mean results
-gdf |> 
-  ggplot(aes(x = tau, y = elpd_mean)) + 
-  geom_line() +
-  facet_grid(prior~n, scales = "fixed")
-
-# Identify optimal tau
-best_lines <- gdf |>
-  ungroup() |>
-  group_by(n, prior) |>
-  filter(elpd_mean == max(elpd_mean)) 
-
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
-  summarize(elpd_min = quantile(elpd, probs = 0.1),
-            elpd_max = quantile(elpd, probs = 0.9))
+  summarize(elpd_min = quantile(elpd, probs = 0.05),
+            elpd_max = quantile(elpd, probs = 0.95))
+
+# Restrict the data to only the first hundred realisations
+df_100 <- df |> filter(iter <= 100)
 
 # Plot the elpd over iterations
 p_elpd <- ggplot() +
+  geom_line(data = df_100,
+            aes(tau, elpd, group = iter), 
+            colour = "grey",
+            #size = 0.2, 
+            alpha = 0.15) +
   geom_ribbon(data = rdf,
               aes(ymin = elpd_min,
                   ymax = elpd_max,
                   x = tau),
               colour = "grey",
               alpha = 0.15) +
-  geom_line(data = gdf,
-            aes(tau, elpd_mean),
-            colour = "black",
-            size = 1) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log10") +
   xlab("tau") +
   ylab("LOO-CV elpd") +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        strip.background = element_blank(),
-        panel.background = element_blank(),
-        legend.position="none") 
+  paper_theme
 p_elpd
 
 # histograms
 facet_names <- c(
-  `elpd` = "LOO-CV elpd",
-  `tau` = "log10(tau)",
+  `elpd` = "elpd(tau)",
+  `tau` = "log2(tau)",
   `2` = "n = 2",
   `10` = "n = 10",
-  `100` = "n = 100"
+  `100` = "n = 100",
+  `1000` = "n = 1000"
 )
 p_tau_sel <- df |>
   # filter based on prior
   filter(prior == "weak") |>
   dplyr::select(-c("prior")) |>
   # mutate tau to be in log scale
-  mutate(tau = log10(tau)) |>
+  mutate(tau = log2(tau)) |>
   # choose the best tau by elpd
   group_by(n, iter) |>
   filter(elpd == max(elpd)) |>
@@ -161,7 +148,7 @@ p_tau_sel <- df |>
 p_tau_sel
 
 # save the plot
-ggsave("./figs/normal-location-tau-selection.pdf", width = 5, height = 5 / GR)
-tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
+ggsave("./figs/normal-location-tau-selection.pdf", width = 5, height = 4)
+tex_width <- 5 * 0.8; tex_height = 4 * 0.8
 save_tikz_plot(p_tau_sel, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-tau-selection.tex")
