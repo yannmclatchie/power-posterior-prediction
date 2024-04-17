@@ -5,6 +5,7 @@ library(ggplot2)
 library(rmutil)
 library(reshape2)
 library(lemon)
+library(patchwork)
 source("R/normal-location/config.R")
 
 # LOO-CV elpd of the normal model
@@ -36,10 +37,10 @@ lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
   y_oos <- y[i]
   
   # compute posterior parameters
-  n <- length(y_loo)
+  n_loo <- length(y_loo) # this is (n - 1)
   bar_y_i <- mean(y_loo)
-  sigma_i <- sqrt(1 / ((n * tau) / sigma_ast^2 + 1 / sigma_0^2))
-  mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + (n * tau * bar_y_i) / sigma_ast^2)
+  sigma_i <- sqrt(1 / ((n_loo * tau) / sigma_ast^2 + 1 / sigma_0^2))
+  mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + (n_loo * tau * bar_y_i) / sigma_ast^2)
   
   # evaluate the log predictive
   log_pred <- dnorm(x = y_oos, mean = mu_i, 
@@ -104,51 +105,45 @@ p_elpd <- ggplot() +
 p_elpd
 
 # histograms
-facet_names <- c(
-  `elpd` = "elpd(tau)",
-  `tau` = "log2(tau)",
-  `2` = "n = 2",
-  `10` = "n = 10",
-  `100` = "n = 100",
-  `1000` = "n = 1000"
-)
-p_tau_sel <- df |>
+sel_df <- df |>
   # filter based on prior
   filter(prior == "weak") |>
   dplyr::select(-c("prior")) |>
   # mutate tau to be in log scale
-  mutate(tau = log2(tau)) |>
+  mutate(tau = log(tau)) |>
   # choose the best tau by elpd
   group_by(n, iter) |>
   filter(elpd == max(elpd)) |>
   ungroup() |>
   melt(id.vars = c("iter", "n")) |>
-  as_tibble() |>
+  as_tibble()
+p_tau_sel_small <- sel_df |>
+  # filter based on n regime
+  filter(n < 100) |>
   ggplot(aes(x = value)) +
   geom_histogram() +
   facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
-                 labeller = as_labeller(facet_names), repeat.tick.labels = TRUE) +
+                 labeller = as_labeller(facet_names), repeat.tick.labels = FALSE) +
   xlab(NULL) +
   ylab(NULL) +
-  theme_bw() +
-  theme(axis.line.y=element_blank(),
-        axis.line.x=element_line(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.ticks.x = element_line(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        strip.background=element_blank(),
-        legend.position="none",
-        panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        plot.background=element_blank())
+  theme_sel
+p_tau_sel_big <- sel_df |>
+  # filter based on n regime
+  filter(n >= 100) |> 
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
+                 labeller = as_labeller(facet_names), repeat.tick.labels = FALSE) +
+  xlab(NULL) +
+  ylab(NULL) +
+  theme_sel
+# patch plots
+p_tau_sel <- p_tau_sel_small + p_tau_sel_big
 p_tau_sel
 
 # save the plot
-ggsave("./figs/normal-location-tau-selection.pdf", width = 5, height = 4)
-tex_width <- 5 * 0.8; tex_height = 4 * 0.8
+ggsave("./figs/normal-location-tau-selection.pdf", width = 6, height = 6 / GR)
+my_width <- 1
+tex_width <- 6 * my_width; tex_height = 2.25 * my_width
 save_tikz_plot(p_tau_sel, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-tau-selection.tex")

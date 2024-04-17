@@ -3,6 +3,7 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 library(bayesflow)
+library(readr)
 source("R/normal-location/config.R")
 
 ## ----
@@ -109,6 +110,9 @@ df <- combis |>
 # save resutls to csv 
 file_name <- paste0("data/normal-location-kld.csv")
 write_csv(df, file = file_name)
+
+# read results from csv
+df <- read_csv(file = file_name)
 
 # fix ordering of priors
 avg_df$prior = factor(avg_df$prior, levels=c('weak', 'flat'))

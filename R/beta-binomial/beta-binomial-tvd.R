@@ -62,7 +62,8 @@ file_name <- paste0("data/beta-binomial-tvd.csv")
 write_csv(df, file = file_name)
 
 # read results from csv
-df <- read_csv(file = file_name)
+df <- read_csv(file = file_name) |>
+  filter(n < 1000)
 
 # Group dataframe by iteration
 gdf <- df |>
@@ -99,7 +100,7 @@ p_tvd <- ggplot() +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
-  scale_y_continuous(limits = c(0, 1)) +
+  #scale_y_continuous(limits = c(0, 1)) +
   xlab("tau") +
   ylab("TVD") +
   paper_theme
@@ -107,7 +108,7 @@ p_tvd
 
 # save the plot
 ggsave("./figs/beta-binomial-tvd.pdf", width = 5, height = 5 / GR)
-my_width <- 0.9
+my_width <- 0.8
 tex_width <- 5 * my_width; tex_height = (5 / GR) * my_width
 save_tikz_plot(p_tvd, width = tex_width, height = tex_height * 0.75,
                filename = "./tikz/beta-binomial-tvd.tex")
