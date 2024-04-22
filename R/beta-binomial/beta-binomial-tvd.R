@@ -6,14 +6,16 @@ library(bayesflow)
 source("R/beta-binomial/config.R")
 
 # numerical computation of TVD between the DGP and predictive
-tvd_beta_binom <- function(n, p, alpha, beta) {
+tvd_beta_binom <- function(p, alpha, beta) {
   # convert alpha and beta to m and s
   m <- alpha / (alpha + beta)
   s <- (alpha + beta)
   
   # compute the numerical summation
-  sum(0.5 * abs(dbinom(1:n, n, p)
-                - dbetabinom(1:n, n, m, s)))
+  0.5 * (abs(dbinom(0, 1, p)
+             - dbetabinom(0, 1, m, s))
+         + abs(dbinom(1, 1, p)
+               - dbetabinom(1, 1, m, s)))
 }
 
 # main experiment function
@@ -33,9 +35,7 @@ tau_tvd <- function(iter, n, prior, tau, theta_ast) {
   beta_n <- beta + tau * z
   
   # compute the TVD between the posterior predictive and the true DGP
-  tvd <- tvd_beta_binom(n, theta_ast, alpha_n, beta_n)
-  
-  # compute the LOO-CV elpd
+  tvd <- tvd_beta_binom(theta_ast, alpha_n, beta_n)
   return(list(tvd = tvd,
               iter = iter,
               n = n,
@@ -64,6 +64,10 @@ write_csv(df, file = file_name)
 # read results from csv
 df <- read_csv(file = file_name) |>
   filter(n < 1000)
+
+# scale the tvd by a function of n
+df <- df |>
+  mutate(tvd = tvd * sqrt(n))
 
 # Group dataframe by iteration
 gdf <- df |>
