@@ -13,7 +13,7 @@ num_iters <- 1e4
 iters <- 1:num_iters  # number of iterations
 ns <- c(2, 10, 100, 1000)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations
-taus <- 2^seq(-7, 7, length.out = n_tau)  # regimes of tau
+taus <- c(0, 2^seq(-7, 7, length.out = n_tau), Inf)  # regimes of tau
 priors <- list(list(mu = 0, sigma = 1, name = "weak"),
                list(mu = 0, sigma = sqrt(1e26), name = "flat"))
 sigmas <- c(1, 1e26)

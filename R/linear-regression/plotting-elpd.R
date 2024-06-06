@@ -51,8 +51,8 @@ p_elpd <- ggplot() +
   #geom_line(data = rdf,
   #          aes(tau, elpd_mean),
   #          size = 0.75) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  facet_grid(prior ~ n, scales = "fixed") +
+  #geom_vline(xintercept = 1, linetype = "dashed") +
+  facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +

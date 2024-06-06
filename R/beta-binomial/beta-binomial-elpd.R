@@ -62,7 +62,7 @@ df <- combis |>
 
 # save resutls to csv 
 file_name <- paste0("data/beta-binomial-elpd.csv")
-write_csv(df, file = file_name)
+#write_csv(df, file = file_name)
 
 # read in previously computed results
 df <- read_csv(file = "data/beta-binomial-elpd.csv")
@@ -96,7 +96,7 @@ p_elpd <- ggplot() +
   #geom_line(data = rdf,
   #          aes(tau, elpd_mean),
   #          size = 0.75) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  #geom_vline(xintercept = 1, linetype = "dashed") +
   facet_wrap( ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),

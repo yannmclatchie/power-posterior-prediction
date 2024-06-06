@@ -32,6 +32,13 @@ avg_df <- combis |>
                                  sigma_0_2 = sigma_0_2)) |>
   bind_rows()
 
+# save resutls to csv 
+file_name <- paste0("data/normal-location-risk.csv")
+#write_csv(avg_df, file = file_name)
+
+# read results from csv
+avg_df <- read_csv(file = file_name)
+
 # plot the risk over tau
 prior_names <- c(
   `1` = "normal(0,1)",
@@ -109,20 +116,36 @@ df <- combis |>
 
 # save resutls to csv 
 file_name <- paste0("data/normal-location-kld.csv")
-write_csv(df, file = file_name)
+#write_csv(df, file = file_name)
 
 # read results from csv
 df <- read_csv(file = file_name)
 
 # fix ordering of priors
-avg_df$prior = factor(avg_df$prior, levels=c('weak', 'flat'))
-df$prior = factor(df$prior, levels=c('weak', 'flat'))
+avg_df$prior = factor(avg_df$prior, levels=c('flat', 'weak'))
+df$prior = factor(df$prior, levels=c('flat', 'weak'))
+
+# scale by sqrt n
+df <- df |>
+  mutate(kld = n * kld)
+avg_df <- avg_df |>
+  mutate(risk = n * risk)
 
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
   summarize(kld_min = quantile(kld, probs = 0.05),
             kld_max = quantile(kld, probs = 0.95))
+
+# Produce vertical dashed lines
+xdf <- df |>
+  group_by(prior, n) |>
+  summarise(xint = 1 / sqrt(n)) |>
+  distinct() 
+ann_text <- data.frame(n = 2, 
+                       prior = 'weak', 
+                       lab = "Text",
+                       tau = 0.1, kld = 2)
 
 # Reduced number of iterations
 df_100 <- df |>
@@ -147,13 +170,16 @@ p_kld <- ggplot() +
             aes(tau, risk),
             colour = "black",
             size = 0.75) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  #geom_vline(data = xdf, aes(xintercept = xint), 
+  #           linetype = "dashed") +
+  #geom_text(data = ann_text, aes(x = tau, y = kld), label = "1 / sqrt n") +
   facet_grid(prior ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
+  scale_y_continuous(limits = c(0, 4)) +
   xlab("tau") +
-  ylab("KLD") +
+  ylab("n KLD") +
   paper_theme
 p_kld
 

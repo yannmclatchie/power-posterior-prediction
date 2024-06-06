@@ -3,6 +3,7 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 library(bayesflow)
+library(readr)
 source("R/beta-binomial/config.R")
 
 # numerical computation of TVD between the DGP and predictive
@@ -59,11 +60,10 @@ df <- combis |>
 
 # save results to csv 
 file_name <- paste0("data/beta-binomial-tvd.csv")
-write_csv(df, file = file_name)
+#write_csv(df, file = file_name)
 
 # read results from csv
-df <- read_csv(file = file_name) |>
-  filter(n < 1000)
+df <- read_csv(file = file_name)
 
 # scale the tvd by a function of n
 df <- df |>
@@ -84,6 +84,16 @@ rdf <- df |>
   summarize(tvd_min = quantile(tvd, probs = 0.05),
             tvd_max = quantile(tvd, probs = 0.95))
 
+# Produce vertical dashed lines
+xdf <- df |>
+  group_by(prior, n) |>
+  summarise(xint = log(n) * sqrt((theta_ast * (1 - theta_ast)) / n)) |>
+  distinct() 
+ann_text <- data.frame(n = 2, 
+                       prior = 'weak', 
+                       lab = "Text",
+                       tau = 1, tvd = 1)
+
 # Plot the TVD over iterations
 p_tvd <- ggplot() +
   geom_line(data = df_100,
@@ -99,14 +109,15 @@ p_tvd <- ggplot() +
               alpha = 0.,
               #size = 0.5,
               linetype = "dotted") +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  #geom_vline(data = xdf, aes(xintercept = xint), 
+  #           linetype = "dashed") +
+  #geom_text(data = ann_text, aes(x = tau, y = tvd), label = "sqrt(pq / n)") +
   facet_wrap( ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
-  #scale_y_continuous(limits = c(0, 1)) +
   xlab("tau") +
-  ylab("TVD") +
+  ylab("sqrt n TVD") +
   paper_theme
 p_tvd
 

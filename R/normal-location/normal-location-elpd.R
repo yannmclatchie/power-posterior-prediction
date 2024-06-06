@@ -1,11 +1,14 @@
 library(dplyr)
 library(tidyr)
+library(readr)
 library(purrr)
 library(ggplot2)
 library(rmutil)
 library(reshape2)
 library(lemon)
-library(patchwork)
+library(ggh4x)
+library(cowplot)
+library(bayesflow)
 source("R/normal-location/config.R")
 
 # LOO-CV elpd of the normal model
@@ -42,6 +45,9 @@ lpd_loo_i <- function(y, i, mu_0, sigma_0, sigma_ast, tau) {
   sigma_i <- sqrt(1 / ((n_loo * tau) / sigma_ast^2 + 1 / sigma_0^2))
   mu_i <- sigma_i^2 * (mu_0 / sigma_0^2 + (n_loo * tau * bar_y_i) / sigma_ast^2)
   
+  # handle the MLE case
+  if (tau == Inf) sigma_i <- 0; mu_i <- bar_y_i
+  
   # evaluate the log predictive
   log_pred <- dnorm(x = y_oos, mean = mu_i, 
                     sd = sqrt(sigma_i^2 + sigma_ast^2), 
@@ -69,19 +75,20 @@ df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # save resutls to csv 
 file_name <- paste0("data/normal-location-elpd.csv")
-write_csv(df, file = file_name)
+#write_csv(df, file = file_name)
 
 # read results from csv
 df <- read_csv(file_name)
 
 # Produce ribbons for the figures
 rdf <- df |>
+  filter(tau > 0 & tau < Inf) |>
   group_by(tau, n, prior) |>
   summarize(elpd_min = quantile(elpd, probs = 0.05),
             elpd_max = quantile(elpd, probs = 0.95))
 
 # Restrict the data to only the first hundred realisations
-df_100 <- df |> filter(iter <= 100)
+df_100 <- df |> filter(tau > 0 & tau < Inf & iter <= 100)
 
 # Plot the elpd over iterations
 p_elpd <- ggplot() +
@@ -90,12 +97,12 @@ p_elpd <- ggplot() +
             colour = "grey",
             #size = 0.2, 
             alpha = 0.15) +
-  geom_ribbon(data = rdf,
-              aes(ymin = elpd_min,
-                  ymax = elpd_max,
-                  x = tau),
-              colour = "grey",
-              alpha = 0.15) +
+  #geom_ribbon(data = rdf,
+  #            aes(ymin = elpd_min,
+  #                x = tau),
+  #                ymax = elpd_max,
+  #            colour = "grey",
+  #            alpha = 0.15) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log10") +
@@ -113,32 +120,81 @@ sel_df <- df |>
   mutate(tau = log(tau)) |>
   # choose the best tau by elpd
   group_by(n, iter) |>
-  filter(elpd == max(elpd)) |>
+  dplyr::filter(elpd == max(elpd)) |>
   ungroup() |>
   melt(id.vars = c("iter", "n")) |>
-  as_tibble()
+  as_tibble() |>
+  # change labelling of infinity
+  mutate(value = case_when(variable == "tau" & value == -Inf ~ -10,
+                           variable == "tau" & value == Inf ~ 10,
+                           TRUE ~ value))
+sel_df
+
+# produce plots for small n
 p_tau_sel_small <- sel_df |>
   # filter based on n regime
-  filter(n < 100) |>
+  filter(n < 100, variable == "tau") |>
   ggplot(aes(x = value)) +
   geom_histogram() +
   facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
-                 labeller = as_labeller(facet_names), repeat.tick.labels = FALSE) +
+                 labeller = as_labeller(facet_names), repeat.tick.labels = T) +
   xlab(NULL) +
   ylab(NULL) +
-  theme_sel
+  theme_sel +
+  theme(strip.text.y = element_blank()) +
+  scale_x_continuous(limits = c(-10, 10),
+                     breaks = c(-10,-5,0,5,10),
+                     labels = c("-infty", -5, 0, 5, "infty")) +
+  guides(x = guide_axis_truncated(
+    trunc_lower = -8, trunc_upper = 8
+  ))
+p_elpd_sel_small <- sel_df |>
+  # filter based on n regime
+  filter(n < 100, variable == "elpd") |>
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
+                 labeller = as_labeller(facet_names), repeat.tick.labels = T) +
+  xlab(NULL) +
+  ylab(NULL) +
+  theme_sel +
+  scale_x_continuous(limits = c(-4, -1)) +
+  coord_capped_cart(bottom = 'both')
+
+# produce plots for big n
 p_tau_sel_big <- sel_df |>
   # filter based on n regime
-  filter(n >= 100) |> 
+  filter(n >= 100, variable == "tau") |>
   ggplot(aes(x = value)) +
   geom_histogram() +
   facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
-                 labeller = as_labeller(facet_names), repeat.tick.labels = FALSE) +
+                 labeller = as_labeller(facet_names), repeat.tick.labels = T) +
   xlab(NULL) +
   ylab(NULL) +
-  theme_sel
+  theme_sel +
+  theme(strip.text.y = element_blank()) +
+  scale_x_continuous(limits = c(-10, 10),
+                     breaks = c(-10,-5,0,5,10),
+                     labels = c("-infty", -5, 0, 5, "infty")) +
+  guides(x = guide_axis_truncated(
+    trunc_lower = -8, trunc_upper = 8
+  ))
+p_elpd_sel_big <- sel_df |>
+  # filter based on n regime
+  filter(n >= 100, variable == "elpd") |>
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_rep_grid(n ~ variable, switch = "y", scales = "free_x", 
+                 labeller = as_labeller(facet_names), repeat.tick.labels = T) +
+  xlab(NULL) +
+  ylab(NULL) +
+  theme_sel +
+  scale_x_continuous(limits = c(-4, -1)) +
+  coord_capped_cart(bottom = 'both')
+
 # patch plots
-p_tau_sel <- p_tau_sel_small + p_tau_sel_big
+p_tau_sel <- plot_grid(p_elpd_sel_small, p_tau_sel_small, 
+                       p_elpd_sel_big, p_tau_sel_big, nrow = 1)
 p_tau_sel
 
 # save the plot

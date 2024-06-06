@@ -82,6 +82,16 @@ rdf <- df |>
             tvd_max = quantile(tvd, probs = 0.95),
             tvd_mean = mean(tvd))
 
+# Produce vertical dashed lines
+xdf <- df |>
+  group_by(prior, n) |>
+  summarise(xint = 1 / sqrt(n)) |>
+  distinct() 
+ann_text <- data.frame(n = 2, 
+                       prior = 'weak', 
+                       lab = "Text",
+                       tau = 0.1, tvd = 0.8)
+
 # Reduced number of iterations
 df_100 <- df |>
   filter(iter <= 50)
@@ -104,14 +114,15 @@ p_tvd <- ggplot() +
   geom_line(data = rdf,
             aes(tau, tvd_mean),
             size = 0.75) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  #geom_vline(data = xdf, aes(xintercept = xint), 
+  #           linetype = "dashed") +
+  #geom_text(data = ann_text, aes(x = tau, y = tvd), label = "1 / sqrt n") +
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
                      label = function(x) ifelse(x == 0, "0", x)) +
-  #scale_y_continuous(limits = c(0, 1)) +
   xlab("tau") +
-  ylab("TVD") +
+  ylab("sqrt n TVD") +
   paper_theme
 p_tvd
 
