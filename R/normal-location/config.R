@@ -1,7 +1,7 @@
 require("ggplot2")
 
 # set the seed
-SEED <- 1234
+SEED <- 12345
 set.seed(SEED)
 
 # define the true DGP
@@ -9,7 +9,7 @@ theta_ast <- 0
 sigma_ast <- 1
 
 # repeat the experiment over different regimes
-num_iters <- 1e4
+num_iters <- 1e3
 iters <- 1:num_iters  # number of iterations
 ns <- c(2, 10, 100, 1000)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations

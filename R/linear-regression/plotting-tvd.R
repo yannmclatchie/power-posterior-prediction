@@ -26,15 +26,14 @@ rdf <- df |>
             tvd_max = quantile(tvd, probs = 0.95),
             tvd_mean = mean(tvd))
 
-# Restrict the data to only the first hundred realisations
-df_100 <- df |> filter(iter <= 50)
+# Choose 50 random iterations
+df_100 <- df |> filter(iter %in% sample(unique(df$iter), 50))
 
 # Plot the tvd over iterations
 p_tvd <- ggplot() +
   geom_line(data = df_100,
             aes(tau, tvd, group = iter), 
             colour = "grey",
-            #size = 0.2, 
             alpha = 0.15) +
   geom_ribbon(data = rdf,
               aes(ymin = tvd_min,
@@ -42,7 +41,6 @@ p_tvd <- ggplot() +
                   x = tau),
               colour = "black",
               alpha = 0.,
-              #size = 0.5,
               linetype = "dotted") +
   facet_grid(prior ~ n, scales = "free") +
   scale_x_continuous(trans = "log2", 
@@ -63,7 +61,7 @@ save_tikz_plot(p_tvd, width = tex_width, height = tex_height,
 # use just one box for the main body
 df_single <- df |>
   filter(n == 50, prior == "weak")
-df_single_100 <- df_single |> filter(iter <= 50)
+df_single_100 <- df_single |> filter(iter %in% sample(unique(df$iter), 50))
 rdf_single <- df_single |>
   group_by(tau, n, prior) |>
   summarize(tvd_min = quantile(tvd, probs = 0.05),

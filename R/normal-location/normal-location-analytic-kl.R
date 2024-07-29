@@ -6,6 +6,9 @@ library(bayesflow)
 library(readr)
 source("R/normal-location/config.R")
 
+# restrict tau to reasonable values
+taus <- taus[taus > 0 & is.finite(taus)]
+
 ## ----
 ## In expectation
 
@@ -32,13 +35,6 @@ avg_df <- combis |>
                                  sigma_0_2 = sigma_0_2)) |>
   bind_rows()
 
-# save resutls to csv 
-file_name <- paste0("data/normal-location-risk.csv")
-#write_csv(avg_df, file = file_name)
-
-# read results from csv
-avg_df <- read_csv(file = file_name)
-
 # plot the risk over tau
 prior_names <- c(
   `1` = "normal(0,1)",
@@ -52,7 +48,6 @@ p_risk <- ggplot() +
             aes(tau, risk),
             colour = "black",
             size = 1) +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   facet_grid(sigma_0_2 ~ n, scales = "free_y",
              labeller = as_labeller(prior_names)) +
   scale_x_continuous(trans = "log10", breaks = 10^seq(-4, 4, length.out = 3)) +
@@ -60,13 +55,6 @@ p_risk <- ggplot() +
   ylab("Risk") +
   paper_theme
 p_risk
-
-# save the plot
-GR <- 1.61803
-ggsave("./figs/normal-location-analytic-risk.pdf", width = 5, height = 5 / GR)
-tex_width <- 5 * 0.8; tex_height = (5 / GR) * 0.8
-save_tikz_plot(p_risk, width = tex_width, height = tex_height,
-               filename = "./tikz/normal-location-analytic-risk.tex")
 
 ## ----
 ## Single dataset
@@ -114,16 +102,9 @@ df <- combis |>
        .progress = TRUE) |>
   bind_rows()
 
-# save resutls to csv 
-file_name <- paste0("data/normal-location-kld.csv")
-#write_csv(df, file = file_name)
-
-# read results from csv
-df <- read_csv(file = file_name)
-
 # fix ordering of priors
-avg_df$prior = factor(avg_df$prior, levels=c('flat', 'weak'))
-df$prior = factor(df$prior, levels=c('flat', 'weak'))
+avg_df$prior = factor(avg_df$prior, levels=c('weak', 'flat'))
+df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
 # scale by sqrt n
 df <- df |>
@@ -137,16 +118,6 @@ rdf <- df |>
   summarize(kld_min = quantile(kld, probs = 0.05),
             kld_max = quantile(kld, probs = 0.95))
 
-# Produce vertical dashed lines
-xdf <- df |>
-  group_by(prior, n) |>
-  summarise(xint = 1 / sqrt(n)) |>
-  distinct() 
-ann_text <- data.frame(n = 2, 
-                       prior = 'weak', 
-                       lab = "Text",
-                       tau = 0.1, kld = 2)
-
 # Reduced number of iterations
 df_100 <- df |>
   filter(iter <= 50)
@@ -156,7 +127,6 @@ p_kld <- ggplot() +
   geom_line(data = df_100,
             aes(tau, kld, group = iter), 
             colour = "grey",
-            #size = 0.2, 
             alpha = 0.2) +
   geom_ribbon(data = rdf,
               aes(ymin = kld_min,
@@ -164,15 +134,11 @@ p_kld <- ggplot() +
                   x = tau),
               colour = "black",
               alpha = 0.,
-              #size = 0.5,
               linetype = "dotted") +
   geom_line(data = avg_df,
             aes(tau, risk),
             colour = "black",
             size = 0.75) +
-  #geom_vline(data = xdf, aes(xintercept = xint), 
-  #           linetype = "dashed") +
-  #geom_text(data = ann_text, aes(x = tau, y = kld), label = "1 / sqrt n") +
   facet_grid(prior ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
@@ -189,4 +155,3 @@ my_width <- 1
 tex_width <- 5 * my_width; tex_height = 2.5 * my_width
 save_tikz_plot(p_kld, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-kld.tex")
-

@@ -95,14 +95,13 @@ p_elpd <- ggplot() +
   geom_line(data = df_100,
             aes(tau, elpd, group = iter), 
             colour = "grey",
-            #size = 0.2, 
             alpha = 0.15) +
-  #geom_ribbon(data = rdf,
-  #            aes(ymin = elpd_min,
-  #                x = tau),
-  #                ymax = elpd_max,
-  #            colour = "grey",
-  #            alpha = 0.15) +
+  geom_ribbon(data = rdf,
+              aes(ymin = elpd_min,
+                  x = tau,
+                  ymax = elpd_max),
+              colour = "grey",
+              alpha = 0.15) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log10") +

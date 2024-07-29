@@ -14,7 +14,6 @@ simulate_data <- function(rep_id, n, theta_ast, sigma_ast) {
               sigma_ast = sigma_ast))
 }
 
-
 # initialise empty data list
 datasets <- list()
 

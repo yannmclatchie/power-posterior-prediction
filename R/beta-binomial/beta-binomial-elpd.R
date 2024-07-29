@@ -49,6 +49,9 @@ lpd_loo_i <- function(y, i, alpha, beta, tau) {
 # load in all datasets
 datasets <- readRDS("data/datasets/beta_binomial.RDS")  
 
+# restrict values of tau
+taus <- taus[taus > 0 & is.finite(taus)]
+
 # Evaluate the elpd across combinations
 combis <- expand.grid(iter = iters, n = ns, tau = taus, prior = priors)
 df <- combis |>
@@ -83,7 +86,6 @@ p_elpd <- ggplot() +
   geom_line(data = df_100,
             aes(tau, elpd, group = iter), 
             colour = "grey",
-            #size = 0.2, 
             alpha = 0.15) +
   geom_ribbon(data = rdf,
               aes(ymin = elpd_min,
@@ -91,12 +93,7 @@ p_elpd <- ggplot() +
                   x = tau),
               colour = "black",
               alpha = 0.,
-              #size = 0.5,
               linetype = "dotted") +
-  #geom_line(data = rdf,
-  #          aes(tau, elpd_mean),
-  #          size = 0.75) +
-  #geom_vline(xintercept = 1, linetype = "dashed") +
   facet_wrap( ~ n, scales = "fixed") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),

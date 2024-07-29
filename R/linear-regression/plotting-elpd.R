@@ -19,10 +19,6 @@ df <- read_csv("data/linear-regression/linear-regression-elpd-all.csv")
 # fix ordering of priors
 df$prior = factor(df$prior, levels=c('weak', 'flat'))
 
-# visualise only the weak prior
-#df <- df |>
-#  filter(prior == "weak")
-
 # Produce ribbons for the figures
 rdf <- df |>
   group_by(tau, n, prior) |>
@@ -48,10 +44,6 @@ p_elpd <- ggplot() +
               alpha = 0.,
               #size = 0.5,
               linetype = "dotted") +
-  #geom_line(data = rdf,
-  #          aes(tau, elpd_mean),
-  #          size = 0.75) +
-  #geom_vline(xintercept = 1, linetype = "dashed") +
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log2", 
                      breaks = c(0.01, 0.1, 1, 10, 100),
