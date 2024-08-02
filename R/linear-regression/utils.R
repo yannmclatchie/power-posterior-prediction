@@ -51,7 +51,21 @@ lpd_loo_i <- function(y, X, i, Sigma_0, sigma_ast, tau) {
 ## TVD
 
 # simulation method for the predictors
-x_sim <- function(S, p, eps) {
+x_sim <- function(S, p, eps, seed = NULL) {
+  # set local seed
+  if (!is.null(seed)) {
+    # reinstate system seed after simulation
+    sysSeed <- .GlobalEnv$.Random.seed
+    on.exit({
+      if (!is.null(sysSeed)) {
+        .GlobalEnv$.Random.seed <- sysSeed 
+      } else {
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    })
+    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion")
+  }
+  
   # simulate multivariate normal
   x <- rmvnorm(S, mean = rep(0, p), sigma = diag(p))
   
@@ -130,7 +144,7 @@ linreg_tvd <- function(iter, n, tau, prior, theta_ast, sigma_ast,
   theta_n <- tau / sigma_ast^2 * Sigma_n %*% t(X) %*% y
   
   # simulate the test predictors for MC integration
-  tilde_x <- x_sim(S, p, eps)
+  tilde_x <- x_sim(S, p, eps, seed = X_SEED) # note fixed seed for X sim
   
   # compute the lpd at each test point
   MC_summands <- 1:S |> 

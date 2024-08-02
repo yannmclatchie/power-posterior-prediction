@@ -8,12 +8,12 @@ simulate_data <- function(rep_id, n, p) {
   # generate linear regression data using simstudy
   def <- defRepeat(nVars = p, prefix = "x", formula = "0",
                    variance = "1", dist = "normal")
-  def <- defData(def, varname = "yInlier", formula = lin_formula, 
-                 dist = "normal", variance = "..delta * ..sigma_ast")
   def <- defData(def, varname = "yNormal", formula = lin_formula, 
                  dist = "normal", variance = "..sigma_ast")
+  def <- defData(def, varname = "yOutlier", formula = 10, 
+                 dist = "normal", variance = "..delta")
   def <- defData(def, varname = "y", dist = "mixture",
-                 formula = "yInlier | 0.5 + yNormal | 0.5") # NB: hard-coded eps
+                 formula = "yOutlier | 0.2 + yNormal | 0.8") # NB: hard-coded eps
   dd <- genData(n, def)
   
   # convert to required format

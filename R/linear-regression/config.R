@@ -3,15 +3,15 @@ require("ggplot2")
 
 # set the seed
 SEED <- 1234
+X_SEED <- SEED # to make the curves flat
 set.seed(SEED)
 
-# define the true DGP according to Grunwald
+# define the true DGP
 p <- 5
 sigma_ast <- 1
+delta <- 0.01
 theta_ast <- c(rep(0.1, 4), rep(0, p - 4))
 lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p))
-eps <- 0.5 # in-lier rate
-delta <- 0.01 # mixture variance proportion
 
 # repeat the experiment over different regimes
 num_iters <- 1e4
