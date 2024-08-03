@@ -9,5 +9,5 @@
 module load r
 
 # run experiment with TVD and elpd
-#srun Rscript ./R/linear-regression/linear-regression-elpd.R $1 $2 $3
+srun Rscript ./R/linear-regression/linear-regression-elpd.R $1 $2 $3
 srun Rscript ./R/linear-regression/linear-regression-tvd.R $1 $2 $3
