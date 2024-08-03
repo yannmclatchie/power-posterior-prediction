@@ -1,7 +1,9 @@
 #!/bin/bash
 
-ns=('50' '100' '500')
-priors=('flat' 'weak')
+#ns=('50' '100' '500')
+#priors=('flat' 'weak')
+ns=('50')
+priors=('weak')
 n_iters=1000
 
 # loop over n
