@@ -7,11 +7,13 @@ X_SEED <- SEED # to make the curves flat
 set.seed(SEED)
 
 # define the true DGP
-p <- 5
-sigma_ast <- 1
-delta <- 0.01
-theta_ast <- c(rep(0.1, 4), rep(0, p - 4))
-lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p))
+p <- 5 # number of regression coefficients
+sigma_ast <- 1 # variance of bulk
+delta <- 0.01 # variance of outlier
+theta_ast <- c(rep(0.1, 4), rep(0, p - 4)) # true regression coefficients
+lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p)) # bulk equation
+contam_mu <- 10 # contamination location
+eps <- 0.2 # contamination rate
 
 # repeat the experiment over different regimes
 num_iters <- 1e4

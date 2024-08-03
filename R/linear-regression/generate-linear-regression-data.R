@@ -10,10 +10,10 @@ simulate_data <- function(rep_id, n, p) {
                    variance = "1", dist = "normal")
   def <- defData(def, varname = "yNormal", formula = lin_formula, 
                  dist = "normal", variance = "..sigma_ast")
-  def <- defData(def, varname = "yOutlier", formula = 10, 
+  def <- defData(def, varname = "yOutlier", formula = "..contam_mu", 
                  dist = "normal", variance = "..delta")
   def <- defData(def, varname = "y", dist = "mixture",
-                 formula = "yOutlier | 0.2 + yNormal | 0.8") # NB: hard-coded eps
+                 formula = "yNormal | 0.8 + yOutlier | 0.2") # NB: hard-coded eps
   dd <- genData(n, def)
   
   # convert to required format

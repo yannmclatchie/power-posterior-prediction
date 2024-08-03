@@ -79,8 +79,8 @@ log_mu_dens <- function(tilde_y, tilde_x, theta_ast, sigma_ast, eps, delta) {
   y_pred <- tilde_x %*% theta_ast
   
   # compute and return the log predictive density
-  lpd <- log(eps * dnorm(tilde_y, mean = y_pred, sd = sqrt(delta * sigma_ast^2)) 
-             + (1 - eps) * dnorm(tilde_y, mean = y_pred, sd = sigma_ast))
+  lpd <- log(eps * dnorm(tilde_y, mean = y_pred, sd = sigma_ast) 
+             + (1 - eps) * dnorm(tilde_y, mean = contam_mu, sd = sqrt(delta)))
   return(lpd)
 }
 
