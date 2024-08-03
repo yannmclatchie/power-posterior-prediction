@@ -32,6 +32,7 @@ df <- taus |>
                       delta = delta),
       .progress = TRUE) |>
   bind_rows()
+print("Done!")
 
 # save resutls to csv 
 file_name <- paste0("data/linear-regression-tvd/",

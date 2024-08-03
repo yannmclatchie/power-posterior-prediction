@@ -30,6 +30,7 @@ df <- taus |>
                       sigma_ast = sigma_ast),
       .progress = TRUE) |>
   bind_rows()
+print("Done!")
 
 # save resutls to csv 
 file_name <- paste0("data/linear-regression-elpd/",

@@ -51,7 +51,7 @@ lpd_loo_i <- function(y, X, i, Sigma_0, sigma_ast, tau) {
 ## TVD
 
 # simulation method for the predictors
-x_sim <- function(S, p, eps, seed = NULL) {
+x_sim <- function(S, p, seed = NULL) {
   # set local seed
   if (!is.null(seed)) {
     # reinstate system seed after simulation
@@ -144,7 +144,7 @@ linreg_tvd <- function(iter, n, tau, prior, theta_ast, sigma_ast,
   theta_n <- tau / sigma_ast^2 * Sigma_n %*% t(X) %*% y
   
   # simulate the test predictors for MC integration
-  tilde_x <- x_sim(S, p, eps, seed = X_SEED) # note fixed seed for X sim
+  tilde_x <- x_sim(S, p, seed = X_SEED) # note fixed seed for X sim
   
   # compute the lpd at each test point
   MC_summands <- 1:S |> 
