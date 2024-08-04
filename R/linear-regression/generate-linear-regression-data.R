@@ -13,7 +13,7 @@ simulate_data <- function(rep_id, n, p) {
   def <- defData(def, varname = "yOutlier", formula = "..contam_mu", 
                  dist = "normal", variance = "..delta")
   def <- defData(def, varname = "y", dist = "mixture",
-                 formula = "yNormal | 0.8 + yOutlier | 0.2") # NB: hard-coded eps
+                 formula = "yNormal | 0.5 + yOutlier | 0.5") # NB: hard-coded eps
   dd <- genData(n, def)
   
   # convert to required format

@@ -3,17 +3,18 @@ require("ggplot2")
 
 # set the seed
 SEED <- 1234
-X_SEED <- SEED # to make the curves flat
+X_SEED <- SEED # for `x_sim`
 set.seed(SEED)
 
 # define the true DGP
 p <- 5 # number of regression coefficients
+# NB: below are _variances_
 sigma_ast <- 1 # variance of bulk
 delta <- 0.01 # variance of outlier
 theta_ast <- c(rep(0.1, 4), rep(0, p - 4)) # true regression coefficients
 lin_formula <- genFormula(theta_ast, sprintf("x%s", 1:p)) # bulk equation
-contam_mu <- 10 # contamination location
-eps <- 0.2 # contamination rate
+contam_mu <- 0 # contamination location
+eps <- 0.5 # contamination rate
 
 # repeat the experiment over different regimes
 num_iters <- 1e4
@@ -28,7 +29,7 @@ prior_dict <- list("flat" = flat_prior,
                    "weak" = weak_prior)
 
 # for Monte Carlo integration 
-S <- 1000
+S <- 1e4
 
 # plotting
 GR <- 1.61803

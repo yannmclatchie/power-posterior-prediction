@@ -73,7 +73,6 @@ p_tvd_single <- ggplot() +
   geom_line(data = df_single_100,
             aes(tau, tvd, group = iter), 
             colour = "grey",
-            #size = 0.2, 
             alpha = 0.15) +
   geom_ribbon(data = rdf_single,
               aes(ymin = tvd_min,
@@ -81,7 +80,6 @@ p_tvd_single <- ggplot() +
                   x = tau),
               colour = "black",
               alpha = 0.,
-              #size = 0.5,
               linetype = "dotted") +
   facet_wrap(~ n, scales = "free") +
   scale_x_continuous(trans = "log2", 
