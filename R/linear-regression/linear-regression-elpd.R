@@ -30,10 +30,10 @@ df <- taus |>
                       sigma_ast = sigma_ast),
       .progress = TRUE) |>
   bind_rows()
-print("Done!")
 
 # save resutls to csv 
 file_name <- paste0("data/linear-regression-elpd/",
                     "linear-regression-elpd-n_",
                     n,"-prior_",prior_name,"-iter_",iter,".csv")
 write_csv(df, file = file_name)
+print("Done elpd!")

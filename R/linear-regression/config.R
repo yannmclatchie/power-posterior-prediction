@@ -17,7 +17,7 @@ contam_mu <- 0 # contamination location
 eps <- 0.5 # contamination rate
 
 # repeat the experiment over different regimes
-num_iters <- 1e4
+num_iters <- 1e3
 iters <- 1:num_iters  # number of iterations
 ns <- c(50, 100, 500)  # regimes of n
 n_tau <- 1e2  # number of x-axis evaluations
