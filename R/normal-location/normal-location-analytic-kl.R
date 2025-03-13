@@ -2,6 +2,8 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(ggplot2)
+library(ggmagnify)
+library(directlabels)
 library(bayesflow)
 library(readr)
 source("R/normal-location/config.R")
@@ -21,6 +23,7 @@ risk <- function(n, tau, sigma_0_2) {
            -1 / 2)
   
   # convert the sigma into a prior name
+  if (sigma_0_2 == sqrt(0.2)) {prior_name <- "informative"}
   if (sigma_0_2 == 1) {prior_name <- "weak"}
   if (sigma_0_2 == 1e+26) {prior_name <- "flat"}
   return(list(risk = risk, n = n, tau = tau, sigma_0_2 = sigma_0_2,
@@ -155,3 +158,134 @@ my_width <- 1
 tex_width <- 5 * my_width; tex_height = 2.5 * my_width
 save_tikz_plot(p_kld, width = tex_width, height = tex_height,
                filename = "./tikz/normal-location-kld.tex")
+
+## ---
+## Pre-asymptotic
+
+# define pre-asymptotic regime experiments
+n_range <- seq(1, 500)
+taus <- c(1, 0.5, 0.05)
+
+# evaluate the analytic risk across combinations
+asymp_combis <- expand.grid(n = n_range, tau = taus)
+asymp_df <- asymp_combis |>
+  pmap(\(n, tau) risk(n = n,
+                      tau = tau,
+                      sigma_0_2 = sqrt(0.2))) |>
+  bind_rows()
+
+# plot the pre-asymptotic regime
+asymp_p <- asymp_df |> 
+  mutate(risk = n * risk,
+         tau = as.factor(tau)) |>
+  ggplot(aes(n, risk, colour = tau, linetype = tau)) +
+  geom_line() +
+  scale_colour_manual(values = c("black", "grey", "black")) +
+  scale_linetype_manual(values = c("solid", "solid", "dotdash")) +
+  #scale_colour_manual(values = c("#4477AA", "grey", "#996633")) +
+  paper_theme
+  #theme_bw() +
+  #theme(legend.position = "bottom")
+
+# add magnification
+from <- c(xmin = 0, xmax = 20, ymin = 0, ymax = 0.5)
+to <- c(xmin = 200, xmax = 450, ymin = 0, ymax = 0.4)
+asymp_p <- asymp_p + 
+  geom_magnify(from = from, to = to, axes = "xy")
+
+# add direct labels
+asymp_p <- direct.label(asymp_p,"maxvar.points")
+asymp_p
+
+# save the plot
+my_width <- 1
+tex_width <- 5 * my_width; tex_height = 2.5 * my_width
+save_tikz_plot(asymp_p, width = tex_width, height = tex_height,
+               filename = "./tikz/normal-location-pre-asymp.tex")
+
+# define alternative pre-asymptotic regime experiments
+n_range <- c(seq(1, 50), seq(100, 1e4))
+taus <- c(1, 0.5, 0.1)
+
+# evaluate the analytic risk across combinations
+asymp_combis <- expand.grid(n = n_range, tau = taus)
+asymp_df <- asymp_combis |>
+  pmap(\(n, tau) risk(n = n,
+                      tau = tau,
+                      sigma_0_2 = sqrt(0.2))) |>
+  bind_rows()
+
+# alternative plot
+alt_asymp_p <- asymp_df |> 
+  mutate(risk = n * risk,
+         tau = as.factor(tau),
+         data_regime = n >= 50) |>
+  ggplot(aes(n, risk, colour = tau, linetype = tau)) +
+  geom_line() +
+  facet_wrap(~data_regime, scales = "free", ncol=2) +
+  scale_colour_manual(values = c("black", "grey", "black")) +
+  scale_linetype_manual(values = c("solid", "solid", "dotdash")) +
+  paper_theme + 
+  theme(strip.background = element_blank(),
+        strip.text.x = element_blank())
+alt_asymp_p
+
+# save the plot
+my_width <- 1
+tex_width <- 5 * my_width; tex_height = 2.5 * my_width
+save_tikz_plot(alt_asymp_p, width = tex_width, height = tex_height,
+               filename = "./tikz/normal-location-pre-asymp-alt.tex")
+
+## ---
+## temperature taken at rate 1/n
+
+# compute the analytic KL risk in terms of an alpha
+risk_alpha <- function(n, alpha, sigma_0_2) {
+  # compute tau
+  tau <- alpha / (alpha + n)
+  
+  # compute the analytic risk
+  sigma_n_2 <- sigma_0_2 / (1 + n * tau * sigma_0_2)
+  risk <- (1 / 2 * log(1 + sigma_n_2)
+           + (1 + tau * sigma_n_2) / (2 * (1 + sigma_n_2))
+           -1 / 2)
+  
+  # convert the sigma into a prior name
+  if (sigma_0_2 == sqrt(0.2)) {prior_name <- "informative"}
+  if (sigma_0_2 == 1) {prior_name <- "weak"}
+  if (sigma_0_2 == 1e+26) {prior_name <- "flat"}
+  return(list(risk = risk, n = n, alpha = alpha, tau = tau, 
+              sigma_0_2 = sigma_0_2, prior = prior_name))
+}
+
+# define ranges for the experiment
+n_range <- seq(1, 500)
+alphas <- rexp(n = 6, rate = 1)
+
+# evaluate the analytic risk across combinations
+coarse_combis <- expand.grid(n = n_range, alpha = alphas)
+coarse_df <- coarse_combis |>
+  pmap(\(n, alpha) risk_alpha(n = n,
+                              alpha = alpha,
+                              sigma_0_2 = sqrt(0.2))) |>
+  bind_rows()
+
+# plot the (non-)convergence of the coarsened posterior
+coarse_p <- coarse_df |> 
+  mutate(risk = risk,
+         alpha = paste0("alpha = ", as.factor(round(alpha, digits = 3)))) |>
+  ggplot(aes(n, risk, linetype = alpha, fill = alpha)) +
+  geom_line() +
+  geom_hline(yintercept = 0, size = 0.3) + 
+  scale_colour_manual(values = rep("black", times = 6)) +
+  paper_theme +
+  ylim(0, max(coarse_df$risk)) + 
+  xlim(0, 550)
+coarse_p <- direct.label(coarse_p,"last.qp")
+coarse_p
+
+# save the plot
+my_width <- 1
+tex_width <- 5 * my_width; tex_height = 2.5 * my_width
+save_tikz_plot(coarse_p, width = tex_width, height = tex_height,
+               filename = "./tikz/normal-location-coarsening.tex")

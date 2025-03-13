@@ -2,6 +2,8 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(ggplot2)
+library(ggeasy)
+library(directlabels)
 library(bayesflow)
 library(tidyverse)
 source("R/normal-location/config.R")
@@ -140,12 +142,42 @@ triangle_df <- rdf |>
 # replace underscores for plotting
 triangle_df$variable <- gsub("_", " ", triangle_df$variable)
 
+# make single plot for just one prior and n
+p_triangle_small <- triangle_df  |>
+  filter(n == 10, prior == "weak") |>
+  ggplot(aes(tau, value, linetype = variable,
+             alpha = variable,
+             colour = variable)) +
+  #geom_hline(yintercept = 0, colour = "black") + 
+  geom_line() +
+  scale_x_continuous(trans = "log2", 
+                     breaks = c(0.01, 0.1, 1, 10, 100),
+                     limits = c(0.01, 500),
+                     label = function(x) ifelse(x == 0, "0", x)) + 
+  scale_linetype_manual(values = c("longdash", "solid", "solid",
+                                   "dotted")) +
+  scale_alpha_manual(values = c(1, 1, 0.5, 1)) +
+  scale_colour_manual(values = c("black", "red", "grey", "black")) +
+  xlab("tau") +
+  ylab("sqrt n TVD") +
+  paper_theme
+p_triangle_small <- direct.label(p_triangle_small,"last.qp")
+p_triangle_small
+
+# save the plot
+my_width <- 0.8
+scaling <- 0.75
+tex_width <- 5 * my_width * 0.6; tex_height = (5 / GR) * my_width
+tex_width <- tex_width * scaling; tex_height = tex_height * scaling
+save_tikz_plot(p_triangle_small, width = tex_width, height = tex_height,
+               filename = "./tikz/triangle-tvd-small.tex")
+
 # plot the TVD components by triangle inequality
 p_triangle <- triangle_df  |>
   ggplot(aes(tau, value, linetype = variable,
              alpha = variable,
              colour = variable)) +
-  geom_hline(yintercept = 0, colour = "red") + 
+  geom_hline(yintercept = 0, colour = "black") + 
   geom_line() + 
   facet_grid(prior ~ n, scales = "free_y") +
   scale_x_continuous(trans = "log2", 
@@ -154,15 +186,23 @@ p_triangle <- triangle_df  |>
   scale_linetype_manual(values = c("longdash", "solid", "solid",
                                    "dotted")) +
   scale_alpha_manual(values = c(1, 1, 0.5, 1)) +
-  scale_colour_manual(values = c("black", "black", "grey", "black")) +
+  scale_colour_manual(values = c("black", "red", "grey", "black")) +
   xlab("tau") +
   ylab("sqrt n TVD") +
   theme_classic() +
-  theme(#legend.position = c(0.86, 0.35),
-        legend.background = element_rect(colour = "white", fill = "white"),
-        legend.box.background = element_rect(colour = "white", fill = "white"),
-        legend.text = element_text(size = 8),
-        legend.title = element_blank(),
+  easy_remove_legend() + 
+  theme(#legend.position = NULL,
+        #legend.background = element_rect(colour = "white", fill = "white"),
+        #legend.box.background = element_rect(colour = "white", fill = "white"),
+        #legend.text = element_text(size = 8),
+        #legend.title = element_blank(),
         strip.background = element_blank(),
-        axis.text = element_text(size = 8))
+        axis.text = element_text(size = 8),
+        axis.line.x = element_blank())
 p_triangle
+
+# save the plot
+my_width <- 1
+tex_width <- 5 * my_width; tex_height = 2.5 * my_width
+save_tikz_plot(p_triangle, width = tex_width, height = tex_height,
+               filename = "./tikz/triangle-tvd.tex")
